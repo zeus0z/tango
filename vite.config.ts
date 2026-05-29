@@ -16,14 +16,83 @@ export default defineConfig({
     babel({ presets: [reactCompilerPreset()] }),
     VitePWA({
       registerType: 'autoUpdate',
+      // Explicitly include static assets in precache
+      includeAssets: [
+        'favicon.svg',
+        'apple-touch-icon.png',
+        'pwa-192x192.png',
+        'pwa-512x512.png',
+        'pwa-512x512-maskable.png',
+      ],
+      workbox: {
+        // Precache JS, CSS, HTML, fonts, and image assets
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,woff}'],
+        // Runtime caching for card images and any Supabase storage assets
+        runtimeCaching: [
+          {
+            // Cache Supabase storage assets (card images, audio) with CacheFirst
+            urlPattern: /^https:\/\/.*\.supabase\.co\/storage\/.*$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'supabase-storage-cache',
+              expiration: {
+                maxEntries: 200,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          {
+            // Cache Supabase API responses (card data) with NetworkFirst for freshness
+            urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/.*$/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'supabase-api-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24, // 1 day
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+        ],
+      },
       manifest: {
         name: 'Nihongo Flash',
-        short_name: 'NihongoFlash',
+        short_name: 'Nihongo',
         description: 'Learn Japanese hiragana and katakana with spaced repetition',
-        theme_color: '#ffffff',
+        theme_color: '#6366f1',
+        background_color: '#0f0f11',
+        display: 'standalone',
+        orientation: 'portrait',
+        start_url: '/',
+        scope: '/',
         icons: [
-          { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png' },
+          {
+            src: 'pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+          },
+          {
+            src: 'pwa-512x512-maskable.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
+          {
+            src: 'apple-touch-icon.png',
+            sizes: '180x180',
+            type: 'image/png',
+          },
         ],
       },
     }),
