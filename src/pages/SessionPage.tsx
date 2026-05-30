@@ -1,28 +1,28 @@
 /**
  * SessionPage — /session
  *
- * Entry point for the study session. Reads sessionMode from Zustand store,
- * builds the card queue via TanStack Query, then hands off to SessionCardView.
+ * Entry point for the study session. Reads sessionMode from React Router
+ * location state (set by /home's SessionModeSelector), builds the card queue
+ * via TanStack Query, then hands off to SessionCardView.
  *
- * ## Mode handoff contract (PER-14 → PER-15 coordination)
- * PER-15 (home) navigates to /session by calling:
- *   setStudySession(mode, [])   // queue IDs left empty; session builds own queue
- *   navigate('/session')
- * The mode is read from useAppStore(s => s.sessionMode).
- * Fallback: if sessionMode is null, defaults to 'learn'.
+ * Mode handoff contract: React Router location state — one-shot, request-scoped.
+ * Defaults to 'learn' on a cold visit (e.g. refresh / direct URL).
  */
 
 import { useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import PageTransition from '@/components/PageTransition'
 import { useAppStore } from '@/lib/store'
+import type { SessionMode } from '@/types'
 import { useSessionQueueQuery } from '@/features/session/hooks/useSessionQueue'
 import { SessionCardView } from '@/features/session'
 
 export default function SessionPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const session = useAppStore((s) => s.session)
-  const sessionMode = useAppStore((s) => s.sessionMode) ?? 'learn'
+  const sessionMode =
+    (location.state as { mode?: SessionMode } | null)?.mode ?? 'learn'
 
   const userId = session?.user.id ?? ''
 
