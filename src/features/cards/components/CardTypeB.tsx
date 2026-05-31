@@ -137,6 +137,7 @@ export function CardTypeB({ card, onAnswer, revealed = false, onReveal }: CardTy
     <div className="flex flex-col items-center w-full gap-6">
       {/* ── Card face — romaji prompt ──────────────────────────────────────── */}
       <div
+        onClick={!revealed ? onReveal : undefined}
         className={cn(
           'w-full rounded-3xl shadow-md',
           'bg-card-bg',
@@ -165,17 +166,6 @@ export function CardTypeB({ card, onAnswer, revealed = false, onReveal }: CardTy
               </span>
             )}
           </motion.p>
-        )}
-
-        {/* Tap to reveal hint */}
-        {!revealed && (
-          <button
-            type="button"
-            onClick={onReveal}
-            className="mt-4 text-xs text-muted-foreground/60 select-none"
-          >
-            Tap to answer
-          </button>
         )}
       </div>
 
