@@ -7,6 +7,9 @@
  *
  * Mode handoff contract: React Router location state — one-shot, request-scoped.
  * Defaults to 'learn' on a cold visit (e.g. refresh / direct URL).
+ *
+ * Learn mode uses the curriculum teaching plan (TeachingItem[]).
+ * Review modes use the flat card queue (Card[]).
  */
 
 import { useMemo } from 'react'
@@ -14,7 +17,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import PageTransition from '@/components/PageTransition'
 import { useAppStore } from '@/lib/store'
 import type { SessionMode } from '@/types'
-import { useSessionQueueQuery } from '@/features/session/hooks/useSessionQueue'
+import { useSessionQueueQuery, useTeachingPlanQuery } from '@/features/session/hooks/useSessionQueue'
 import { SessionCardView } from '@/features/session'
 
 export default function SessionPage() {
@@ -25,28 +28,40 @@ export default function SessionPage() {
     (location.state as { mode?: SessionMode } | null)?.mode ?? 'learn'
 
   const userId = session?.user.id ?? ''
+  const isLearnMode = sessionMode === 'learn'
 
+  // ── Learn mode: fetch teaching plan ──────────────────────────────────────
+  const {
+    data: teachingPlan,
+    isLoading: isPlanLoading,
+    isError: isPlanError,
+    error: planError,
+  } = useTeachingPlanQuery({
+    userId,
+    enabled: !!userId && isLearnMode,
+  })
+
+  // ── Review modes: fetch flat card queue ───────────────────────────────────
   const {
     data: queue,
-    isLoading,
-    isError,
-    error,
+    isLoading: isQueueLoading,
+    isError: isQueueError,
+    error: queueError,
   } = useSessionQueueQuery({
     userId,
     mode: sessionMode,
-    enabled: !!userId,
+    enabled: !!userId && !isLearnMode,
   })
 
-  // Determine which cards are "new" (unseen) for learned-count tracking.
-  // In learn mode the first ≤5 cards were fetched as unseen; we approximate
-  // by tagging all cards that came back with state === 'New' or no progress.
-  // Since buildLearnQueue puts new cards first, we tag the leading cards
-  // up to the NEW_CARDS_PER_SESSION limit.
-  const NEW_CARDS_PER_SESSION = 5
+  // New card IDs for review modes (unused in learn mode)
   const newCardIds = useMemo<Set<string>>(() => {
-    if (!queue || sessionMode !== 'learn') return new Set()
-    return new Set(queue.slice(0, NEW_CARDS_PER_SESSION).map((c) => c.id))
-  }, [queue, sessionMode])
+    if (!queue || isLearnMode) return new Set()
+    return new Set()
+  }, [queue, isLearnMode])
+
+  const isLoading = isLearnMode ? isPlanLoading : isQueueLoading
+  const isError = isLearnMode ? isPlanError : isQueueError
+  const error = isLearnMode ? planError : queueError
 
   // ---------------------------------------------------------------------------
   // Loading state
@@ -96,7 +111,11 @@ export default function SessionPage() {
   // ---------------------------------------------------------------------------
   // Empty queue state
   // ---------------------------------------------------------------------------
-  if (!queue || queue.length === 0) {
+  const isEmpty = isLearnMode
+    ? !teachingPlan || teachingPlan.length === 0
+    : !queue || queue.length === 0
+
+  if (isEmpty) {
     return (
       <PageTransition>
         <div className="flex min-h-svh flex-col items-center justify-center gap-4 px-6">
@@ -124,12 +143,22 @@ export default function SessionPage() {
   // ---------------------------------------------------------------------------
   return (
     <PageTransition>
-      <SessionCardView
-        initialQueue={queue}
-        mode={sessionMode}
-        userId={userId}
-        newCardIds={newCardIds}
-      />
+      {isLearnMode && teachingPlan ? (
+        <SessionCardView
+          mode="learn"
+          teachingPlan={teachingPlan}
+          userId={userId}
+        />
+      ) : (
+        queue && (
+          <SessionCardView
+            mode={sessionMode as Exclude<SessionMode, 'learn'>}
+            initialQueue={queue}
+            userId={userId}
+            newCardIds={newCardIds}
+          />
+        )
+      )}
     </PageTransition>
   )
 }

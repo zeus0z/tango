@@ -8,6 +8,14 @@ export { SessionCardView } from './components/SessionCardView'
 export { SessionSummary } from './components/SessionSummary'
 export { SessionProgress } from './components/SessionProgress'
 export { RatingButtons } from './components/RatingButtons'
-export { useSessionQueueQuery } from './hooks/useSessionQueue'
-export { buildLearnQueue, buildReviewRecentQueue, buildReviewAllQueue } from './utils/buildSession'
+export { IntroduceCharacter } from './components/IntroduceCharacter'
+export { useSessionQueueQuery, useTeachingPlanQuery } from './hooks/useSessionQueue'
+export {
+  buildLearnQueue,
+  buildLearnTeachingQueue,
+  buildReviewRecentQueue,
+  buildReviewAllQueue,
+  NEW_CARDS_PER_SESSION,
+} from './utils/buildSession'
+export type { TeachingItem } from './utils/buildSession'
 export { persistReview, fetchCardProgress } from './utils/persistReview'
