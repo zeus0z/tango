@@ -143,7 +143,7 @@ export default function LoginPage() {
           {/* ── Branding ── */}
           <div className="flex flex-col items-center gap-1 text-center">
             <h1 className="text-3xl font-bold tracking-tight">日本語フラッシュ</h1>
-            <p className="text-muted-foreground text-sm">Nihongo Flash — learn Japanese with SRS</p>
+            <p className="text-muted-foreground text-sm">Tango — learn Japanese with SRS</p>
           </div>
 
           {/* ── Auth card ── */}

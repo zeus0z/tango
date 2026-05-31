@@ -1,5 +1,5 @@
 -- ============================================================
--- Nihongo Flash — card seed
+-- Tango — card seed
 -- Idempotent: re-running is safe (on conflict do nothing).
 --
 -- How to run:

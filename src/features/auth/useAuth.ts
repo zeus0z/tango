@@ -1,5 +1,5 @@
 /**
- * useAuth — central auth hook for Nihongo Flash.
+ * useAuth — central auth hook for Tango.
  *
  * Responsibilities:
  * 1. Subscribe to supabase.auth.onAuthStateChange once (at app boot via AppAuthProvider).

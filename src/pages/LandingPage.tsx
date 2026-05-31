@@ -27,9 +27,14 @@ export default function LandingPage() {
 
             {/* Wordmark / app name */}
             <div className="flex flex-col gap-1">
-              <span className="text-xs font-semibold tracking-widest uppercase text-primary">
-                Nihongo Flash
-              </span>
+              <div className="flex flex-col items-center md:items-start gap-0.5">
+                <span lang="ja" className="text-4xl md:text-5xl font-bold font-ja text-primary leading-none">
+                  単語
+                </span>
+                <span className="text-sm font-semibold tracking-[0.25em] uppercase text-foreground">
+                  TANGO
+                </span>
+              </div>
               <h1 className="text-4xl md:text-5xl font-bold leading-tight text-foreground">
                 Learn Japanese<br />
                 <span lang="ja" className="font-ja text-primary">
@@ -90,7 +95,7 @@ export default function LandingPage() {
 
         {/* ── Footer ──────────────────────────────────────────────────────── */}
         <footer className="text-center text-xs text-muted-foreground/50 py-6 px-4">
-          &copy; {new Date().getFullYear()} Nihongo Flash. Built for learners.
+          &copy; {new Date().getFullYear()} Tango. Built for learners.
         </footer>
       </div>
     </PageTransition>

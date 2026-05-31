@@ -46,7 +46,10 @@ export default function HomePage() {
           {/* ── Header ─────────────────────────────────────────────────── */}
           <header className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold text-foreground">Nihongo Flash</h1>
+              <h1 className="text-xl font-bold text-foreground flex items-baseline gap-2">
+                <span lang="ja" className="font-ja text-primary">単語</span>
+                <span className="tracking-widest uppercase text-sm">TANGO</span>
+              </h1>
               <p className="text-sm text-muted-foreground">
                 {user?.email ? `Signed in as ${user.email}` : 'Loading…'}
               </p>
