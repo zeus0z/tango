@@ -4,16 +4,21 @@
  * Layout matches docs/sounds_options.jpeg EXACTLY:
  *  - 10 columns: A / K / S / T / N / H / M / Y / R / W  (col indices 0-9)
  *  - 5 vowel rows: a / i / u / e / o
- *  - 1 special bottom row: lone N (col 0), backspace (cols 6-7, 2-wide),
- *    confirm/checkmark (cols 8-9, 2-wide, blue)
+ *  - 1 special bottom row: lone N (col 0), empty cols 1-9
  *
  * Gaps (empty cells) per the screenshot:
  *  - Row i (index 1): Y col (7) empty, W col (9) empty
  *  - Row u (index 2): W col (9) empty
  *  - Row e (index 3): Y col (7) empty, W col (9) empty
+ *
+ * Interaction model (instant-answer):
+ *  - Tapping a cell IS the answer — no confirm step.
+ *  - Correct tap → cell flashes green, then onAnswer(true) fires.
+ *  - Wrong tap → tapped cell flashes red, correct cell flashes green
+ *    simultaneously, then onAnswer(false) fires after ~600ms.
  */
 
-import { Delete, Check } from 'lucide-react'
+import { useState, useCallback } from 'react'
 import { cn } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------
@@ -34,17 +39,23 @@ const VOWEL_ROWS: Cell[][] = [
 ]
 
 // ---------------------------------------------------------------------------
+// Flash state per cell
+// ---------------------------------------------------------------------------
+
+type CellFlash = 'idle' | 'correct' | 'wrong'
+
+// ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
 
 interface GridKeyProps {
   label: string
-  selected?: boolean
-  disabled?: boolean
+  flash: CellFlash
+  disabled: boolean
   onClick: () => void
 }
 
-function GridKey({ label, selected, disabled, onClick }: GridKeyProps) {
+function GridKey({ label, flash, disabled, onClick }: GridKeyProps) {
   return (
     <button
       type="button"
@@ -55,14 +66,17 @@ function GridKey({ label, selected, disabled, onClick }: GridKeyProps) {
         'flex items-center justify-center',
         'min-h-[48px] w-full rounded-lg',
         'text-sm font-medium select-none',
-        // Colours
-        'bg-secondary text-secondary-foreground',
-        // Active tap feedback (mobile-first — no hover)
-        'active:scale-95 active:bg-secondary/70 transition-transform duration-75',
-        // Selected state
-        selected && 'ring-2 ring-primary bg-primary/10',
-        // Disabled / empty
-        disabled && 'invisible pointer-events-none',
+        // Colour transitions
+        'transition-colors duration-150',
+        // Default colours
+        flash === 'idle' && 'bg-secondary text-secondary-foreground',
+        // Flash states
+        flash === 'correct' && 'bg-green-300 text-green-900',
+        flash === 'wrong'   && 'bg-red-300 text-red-900',
+        // Active tap feedback (only when idle and interactive)
+        flash === 'idle' && !disabled && 'active:scale-95 active:bg-secondary/70 transition-transform duration-75',
+        // Disabled / no interaction after answer
+        disabled && 'pointer-events-none',
       )}
     >
       {label}
@@ -75,25 +89,40 @@ function GridKey({ label, selected, disabled, onClick }: GridKeyProps) {
 // ---------------------------------------------------------------------------
 
 interface RomajiGridProps {
-  /** The romaji value that has been tapped (controlled). */
-  selected: string | null
-  /** Called with the romaji label when a key is tapped. */
-  onSelect: (romaji: string) => void
-  /** Called when the confirm (checkmark) key is tapped. */
-  onConfirm: () => void
-  /** Called when the backspace key is tapped. */
-  onBackspace: () => void
-  /** Disable all keys (e.g. after answer submitted). */
-  disabled?: boolean
+  /** The correct romaji for this card — used to evaluate taps instantly. */
+  correctRomaji: string
+  /** Called with true/false after the flash animation completes (~600ms). */
+  onAnswer: (correct: boolean) => void
 }
 
-export function RomajiGrid({
-  selected,
-  onSelect,
-  onConfirm,
-  onBackspace,
-  disabled = false,
-}: RomajiGridProps) {
+export function RomajiGrid({ correctRomaji, onAnswer }: RomajiGridProps) {
+  /** Map from romaji → flash state. Empty = all idle. */
+  const [flashes, setFlashes] = useState<Record<string, CellFlash>>({})
+  const [answered, setAnswered] = useState(false)
+
+  const handleTap = useCallback(
+    (romaji: string) => {
+      if (answered) return
+
+      const correct = romaji === correctRomaji
+      setAnswered(true)
+
+      if (correct) {
+        setFlashes({ [romaji]: 'correct' })
+      } else {
+        setFlashes({ [romaji]: 'wrong', [correctRomaji]: 'correct' })
+      }
+
+      // Fire onAnswer after the flash animation (~600ms)
+      setTimeout(() => {
+        setFlashes({})
+        setAnswered(false)
+        onAnswer(correct)
+      }, 600)
+    },
+    [answered, correctRomaji, onAnswer],
+  )
+
   return (
     <div className="w-full grid grid-cols-10 gap-1 px-1">
       {/* ── vowel rows ─────────────────────────────────────────────────────── */}
@@ -107,9 +136,9 @@ export function RomajiGrid({
             <GridKey
               key={cell}
               label={cell}
-              selected={selected === cell}
-              disabled={disabled}
-              onClick={() => onSelect(cell)}
+              flash={flashes[cell] ?? 'idle'}
+              disabled={answered}
+              onClick={() => handleTap(cell)}
             />
           )
         }),
@@ -119,49 +148,15 @@ export function RomajiGrid({
       {/* Lone N — col 0 */}
       <GridKey
         label="n"
-        selected={selected === 'n'}
-        disabled={disabled}
-        onClick={() => onSelect('n')}
+        flash={flashes['n'] ?? 'idle'}
+        disabled={answered}
+        onClick={() => handleTap('n')}
       />
 
-      {/* Empty spacers — cols 1-5 (5 cells) */}
-      {Array.from({ length: 5 }).map((_, i) => (
+      {/* Empty spacers — cols 1-9 */}
+      {Array.from({ length: 9 }).map((_, i) => (
         <div key={`spacer-${i}`} className="min-h-[48px]" />
       ))}
-
-      {/* Backspace — cols 6-7 (span 2) */}
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={onBackspace}
-        className={cn(
-          'col-span-2 flex items-center justify-center',
-          'min-h-[48px] rounded-lg',
-          'bg-secondary text-secondary-foreground',
-          'active:scale-95 active:bg-secondary/70 transition-transform duration-75',
-          disabled && 'opacity-50 pointer-events-none',
-        )}
-        aria-label="Backspace"
-      >
-        <Delete className="w-5 h-5" />
-      </button>
-
-      {/* Confirm — cols 8-9 (span 2, blue) */}
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={onConfirm}
-        className={cn(
-          'col-span-2 flex items-center justify-center',
-          'min-h-[48px] rounded-lg',
-          'bg-blue-500 text-white',
-          'active:scale-95 active:bg-blue-600 transition-transform duration-75',
-          disabled && 'opacity-50 pointer-events-none',
-        )}
-        aria-label="Confirm"
-      >
-        <Check className="w-5 h-5 stroke-[3]" />
-      </button>
     </div>
   )
 }

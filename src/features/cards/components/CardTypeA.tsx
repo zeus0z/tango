@@ -3,8 +3,7 @@
  *
  * Front: shows the Japanese character (≥text-8xl, lang="ja").
  * Back:  shows the full romaji sound grid (RomajiGrid).
- *        User taps the correct romaji; no process of elimination.
- *        Confirm button submits the answer; backspace clears selection.
+ *        Tapping any romaji cell IS the answer — no confirm step.
  *
  * PRESENTATIONAL: receives a Card + callbacks, no data fetching, no FSRS.
  */
@@ -24,8 +23,8 @@ interface CardTypeAProps {
   /** The flashcard data (character, romaji, optional example word). */
   card: Card
   /**
-   * Called when the user confirms their answer.
-   * `correct` is true when the selected romaji matches card.romaji.
+   * Called when the user taps a romaji cell.
+   * `correct` is true when the tapped romaji matches card.romaji.
    */
   onAnswer: (correct: boolean) => void
   /** Whether the card is in the revealed (back) state. */
@@ -39,30 +38,16 @@ interface CardTypeAProps {
 // ---------------------------------------------------------------------------
 
 export function CardTypeA({ card, onAnswer, revealed = false, onReveal }: CardTypeAProps) {
-  const [selected, setSelected] = useState<string | null>(null)
   const [feedback, setFeedback] = useState<FeedbackState>('idle')
-  const [answered, setAnswered] = useState(false)
 
-  function handleConfirm() {
-    if (!selected || answered) return
-
-    const correct = selected === card.romaji
-    setAnswered(true)
+  function handleAnswer(correct: boolean) {
     setFeedback(correct ? 'correct' : 'wrong')
-  }
-
-  function handleBackspace() {
-    if (answered) return
-    setSelected(null)
   }
 
   function handleAnimationComplete() {
     if (feedback !== 'idle') {
       const wasCorrect = feedback === 'correct'
-      // Reset local state before handing off to parent
       setFeedback('idle')
-      setSelected(null)
-      setAnswered(false)
       onAnswer(wasCorrect)
     }
   }
@@ -101,13 +86,8 @@ export function CardTypeA({ card, onAnswer, revealed = false, onReveal }: CardTy
           className="w-full"
         >
           <RomajiGrid
-            selected={selected}
-            onSelect={(romaji) => {
-              if (!answered) setSelected(romaji)
-            }}
-            onConfirm={handleConfirm}
-            onBackspace={handleBackspace}
-            disabled={answered}
+            correctRomaji={card.romaji}
+            onAnswer={handleAnswer}
           />
         </motion.div>
       )}
