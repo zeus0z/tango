@@ -12,6 +12,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Volume2 } from 'lucide-react'
 import type { Card } from '@/types'
+import { Button } from '@/components/ui/button'
 import { AnswerFeedback, type FeedbackState } from './AnswerFeedback'
 import { RomajiGrid } from './RomajiGrid'
 import { cn } from '@/lib/utils'
@@ -41,6 +42,7 @@ interface CardTypeAProps {
 
 export function CardTypeA({ card, onAnswer, revealed = false, onReveal }: CardTypeAProps) {
   const [feedback, setFeedback] = useState<FeedbackState>('idle')
+  const [mnemonicOpen, setMnemonicOpen] = useState(false)
 
   function handleAnswer(correct: boolean) {
     setFeedback(correct ? 'correct' : 'wrong')
@@ -110,6 +112,29 @@ export function CardTypeA({ card, onAnswer, revealed = false, onReveal }: CardTy
             correctRomaji={card.romaji}
             onAnswer={handleAnswer}
           />
+        </motion.div>
+      )}
+
+      {/* ── Mnemonic affordance (shown only when revealed + mnemonic exists) ─ */}
+      {revealed && card.mnemonic && (
+        <motion.div
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+          className="w-full flex flex-col items-start gap-2"
+        >
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setMnemonicOpen((prev) => !prev)}
+          >
+            💡 Show mnemonic
+          </Button>
+          {mnemonicOpen && (
+            <p className="text-sm text-muted-foreground italic line-clamp-3 px-1">
+              {card.mnemonic}
+            </p>
+          )}
         </motion.div>
       )}
     </div>
