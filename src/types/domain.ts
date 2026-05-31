@@ -28,6 +28,8 @@ export interface Card {
   example_word?: string | null
   example_word_romaji?: string | null
   mnemonic?: string | null
+  derives_from?: string | null
+  diacritic?: 'dakuten' | 'handakuten' | null
 }
 
 /** Mirrors the `user_card_progress` table (full FSRS state per user per card). */
