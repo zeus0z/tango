@@ -34,13 +34,18 @@ interface CardTypeAProps {
   revealed?: boolean
   /** Called when the card face is tapped to reveal the back. */
   onReveal?: () => void
+  /**
+   * When true (default): mnemonic is hidden behind a "💡 Show mnemonic" button (PER-22 behaviour).
+   * When false: mnemonic is shown by default with no button (used on the introduction screen).
+   */
+  mnemonicHidden?: boolean
 }
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
-export function CardTypeA({ card, onAnswer, revealed = false, onReveal }: CardTypeAProps) {
+export function CardTypeA({ card, onAnswer, revealed = false, onReveal, mnemonicHidden = true }: CardTypeAProps) {
   const [feedback, setFeedback] = useState<FeedbackState>('idle')
   const [mnemonicOpen, setMnemonicOpen] = useState(false)
 
@@ -123,14 +128,22 @@ export function CardTypeA({ card, onAnswer, revealed = false, onReveal }: CardTy
           transition={{ duration: 0.2 }}
           className="w-full flex flex-col items-start gap-2"
         >
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setMnemonicOpen((prev) => !prev)}
-          >
-            💡 Show mnemonic
-          </Button>
-          {mnemonicOpen && (
+          {mnemonicHidden ? (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setMnemonicOpen((prev) => !prev)}
+              >
+                💡 Show mnemonic
+              </Button>
+              {mnemonicOpen && (
+                <p className="text-sm text-muted-foreground italic line-clamp-3 px-1">
+                  {card.mnemonic}
+                </p>
+              )}
+            </>
+          ) : (
             <p className="text-sm text-muted-foreground italic line-clamp-3 px-1">
               {card.mnemonic}
             </p>
