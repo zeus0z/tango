@@ -14,6 +14,7 @@ export type FeedbackState = 'idle' | 'correct' | 'wrong'
 interface AnswerFeedbackProps {
   feedback: FeedbackState
   onAnimationComplete?: (definition: AnimationDefinition) => void
+  onClick?: () => void
   className?: string
   children: ReactNode
 }
@@ -21,6 +22,7 @@ interface AnswerFeedbackProps {
 export function AnswerFeedback({
   feedback,
   onAnimationComplete,
+  onClick,
   className,
   children,
 }: AnswerFeedbackProps) {
@@ -30,6 +32,7 @@ export function AnswerFeedback({
   return (
     <motion.div
       className={className}
+      onClick={onClick}
       animate={
         isCorrect
           ? { backgroundColor: ['#ffffff', '#dcfce7', '#ffffff'] }

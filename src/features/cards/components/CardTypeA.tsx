@@ -73,6 +73,7 @@ export function CardTypeA({ card, onAnswer, revealed = false, onReveal }: CardTy
       <AnswerFeedback
         feedback={feedback}
         onAnimationComplete={handleAnimationComplete}
+        onClick={!revealed ? onReveal : undefined}
         className={cn(
           'w-full rounded-3xl shadow-md',
           'bg-card-bg',
@@ -105,17 +106,6 @@ export function CardTypeA({ card, onAnswer, revealed = false, onReveal }: CardTy
               </span>
             )}
           </motion.p>
-        )}
-
-        {/* Tap to reveal hint */}
-        {!revealed && (
-          <button
-            type="button"
-            onClick={onReveal}
-            className="mt-6 text-xs text-muted-foreground/60 select-none"
-          >
-            Tap to answer
-          </button>
         )}
       </AnswerFeedback>
 
