@@ -12,6 +12,7 @@ import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Volume2 } from 'lucide-react'
 import type { Card } from '@/types'
+import { Button } from '@/components/ui/button'
 import { getDistractors } from '@/lib/constants/distractors'
 import { HIRAGANA } from '@/lib/constants/hiragana'
 import { AnswerFeedback, type FeedbackState } from './AnswerFeedback'
@@ -92,6 +93,7 @@ function OptionTile({
 export function CardTypeB({ card, onAnswer, revealed = false, onReveal }: CardTypeBProps) {
   const [feedback, setFeedback] = useState<Record<string, FeedbackState>>({})
   const [answered, setAnswered] = useState(false)
+  const [mnemonicOpen, setMnemonicOpen] = useState(false)
 
   // Build the 6-option set: correct + 5 distractors, shuffled.
   // Memoised per card so it doesn't re-shuffle on every render.
@@ -193,6 +195,29 @@ export function CardTypeB({ card, onAnswer, revealed = false, onReveal }: CardTy
               onAnimationComplete={() => handleAnimationComplete(character)}
             />
           ))}
+        </motion.div>
+      )}
+
+      {/* ── Mnemonic affordance (shown only when revealed + mnemonic exists) ─ */}
+      {revealed && card.mnemonic && (
+        <motion.div
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+          className="w-full flex flex-col items-start gap-2"
+        >
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setMnemonicOpen((prev) => !prev)}
+          >
+            💡 Show mnemonic
+          </Button>
+          {mnemonicOpen && (
+            <p className="text-sm text-muted-foreground italic line-clamp-3 px-1">
+              {card.mnemonic}
+            </p>
+          )}
         </motion.div>
       )}
     </div>
