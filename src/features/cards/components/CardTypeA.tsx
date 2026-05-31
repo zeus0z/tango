@@ -10,10 +10,12 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { Volume2 } from 'lucide-react'
 import type { Card } from '@/types'
 import { AnswerFeedback, type FeedbackState } from './AnswerFeedback'
 import { RomajiGrid } from './RomajiGrid'
 import { cn } from '@/lib/utils'
+import { speakHiragana } from '../utils/speak'
 
 // ---------------------------------------------------------------------------
 // Props
@@ -60,13 +62,32 @@ export function CardTypeA({ card, onAnswer, revealed = false, onReveal }: CardTy
         onAnimationComplete={handleAnimationComplete}
         onClick={!revealed ? onReveal : undefined}
         className={cn(
-          'w-full rounded-3xl shadow-md',
+          'relative w-full rounded-3xl shadow-md',
           'bg-card-bg',
           'flex flex-col items-center justify-center',
           'py-10 px-4',
           !revealed && 'cursor-pointer active:scale-[0.98] transition-transform duration-75',
         )}
       >
+        {/* Speaker button — top-right, always visible on Type A */}
+        <button
+          type="button"
+          aria-label="Play pronunciation"
+          onClick={(e) => {
+            e.stopPropagation()
+            speakHiragana(card.character)
+          }}
+          className={cn(
+            'absolute top-3 right-3',
+            'flex items-center justify-center',
+            'w-12 h-12 rounded-full',
+            'text-muted-foreground hover:text-foreground',
+            'transition-transform duration-75 active:scale-90',
+          )}
+        >
+          <Volume2 size={22} />
+        </button>
+
         {/* Front: large Japanese character */}
         <p
           lang="ja"
