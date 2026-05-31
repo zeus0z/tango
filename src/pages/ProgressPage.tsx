@@ -23,6 +23,7 @@ import {
   CharacterDetailDialog,
   StudyHeatmap,
   WeakCardsList,
+  ResetProgressSection,
 } from '@/features/progress'
 import type { MasteryState } from '@/types'
 
@@ -146,6 +147,9 @@ export default function ProgressPage() {
               />
             )}
           </section>
+
+          {/* ── Danger zone: reset all progress ──────────────────────────── */}
+          <ResetProgressSection userId={userId} />
         </div>
 
         {/* ── Character detail dialog ────────────────────────────────────── */}
