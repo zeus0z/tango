@@ -29,6 +29,11 @@ export const GENKI_ORDER: string[] = [
   'r-group',
   'w-group',
   'n',
+  'g-group',
+  'z-group',
+  'd-group',
+  'b-group',
+  'p-group',
 ]
 
 // ---------------------------------------------------------------------------
@@ -103,6 +108,41 @@ export const HIRAGANA: HiraganaChar[] = [
 
   // ── n (standalone) ────────────────────────────────────────────────────────
   { character: 'ん', romaji: 'n',   type: 'hiragana', group_name: 'n',       genki_order: 46, example_word: null,         example_word_romaji: null },
+
+  // ── g-group (dakuten on k-group) ──────────────────────────────────────────
+  { character: 'が', romaji: 'ga',  type: 'hiragana', group_name: 'g-group', genki_order: 47, example_word: null, example_word_romaji: null, derives_from: 'か', diacritic: 'dakuten' },
+  { character: 'ぎ', romaji: 'gi',  type: 'hiragana', group_name: 'g-group', genki_order: 48, example_word: null, example_word_romaji: null, derives_from: 'き', diacritic: 'dakuten' },
+  { character: 'ぐ', romaji: 'gu',  type: 'hiragana', group_name: 'g-group', genki_order: 49, example_word: null, example_word_romaji: null, derives_from: 'く', diacritic: 'dakuten' },
+  { character: 'げ', romaji: 'ge',  type: 'hiragana', group_name: 'g-group', genki_order: 50, example_word: null, example_word_romaji: null, derives_from: 'け', diacritic: 'dakuten' },
+  { character: 'ご', romaji: 'go',  type: 'hiragana', group_name: 'g-group', genki_order: 51, example_word: null, example_word_romaji: null, derives_from: 'こ', diacritic: 'dakuten' },
+
+  // ── z-group (dakuten on s-group) ──────────────────────────────────────────
+  { character: 'ざ', romaji: 'za',  type: 'hiragana', group_name: 'z-group', genki_order: 52, example_word: null, example_word_romaji: null, derives_from: 'さ', diacritic: 'dakuten' },
+  { character: 'じ', romaji: 'ji',  type: 'hiragana', group_name: 'z-group', genki_order: 53, example_word: null, example_word_romaji: null, derives_from: 'し', diacritic: 'dakuten' },
+  { character: 'ず', romaji: 'zu',  type: 'hiragana', group_name: 'z-group', genki_order: 54, example_word: null, example_word_romaji: null, derives_from: 'す', diacritic: 'dakuten' },
+  { character: 'ぜ', romaji: 'ze',  type: 'hiragana', group_name: 'z-group', genki_order: 55, example_word: null, example_word_romaji: null, derives_from: 'せ', diacritic: 'dakuten' },
+  { character: 'ぞ', romaji: 'zo',  type: 'hiragana', group_name: 'z-group', genki_order: 56, example_word: null, example_word_romaji: null, derives_from: 'そ', diacritic: 'dakuten' },
+
+  // ── d-group (dakuten on t-group) ──────────────────────────────────────────
+  { character: 'だ', romaji: 'da',  type: 'hiragana', group_name: 'd-group', genki_order: 57, example_word: null, example_word_romaji: null, derives_from: 'た', diacritic: 'dakuten' },
+  { character: 'ぢ', romaji: 'ji',  type: 'hiragana', group_name: 'd-group', genki_order: 58, example_word: null, example_word_romaji: null, derives_from: 'ち', diacritic: 'dakuten' },
+  { character: 'づ', romaji: 'zu',  type: 'hiragana', group_name: 'd-group', genki_order: 59, example_word: null, example_word_romaji: null, derives_from: 'つ', diacritic: 'dakuten' },
+  { character: 'で', romaji: 'de',  type: 'hiragana', group_name: 'd-group', genki_order: 60, example_word: null, example_word_romaji: null, derives_from: 'て', diacritic: 'dakuten' },
+  { character: 'ど', romaji: 'do',  type: 'hiragana', group_name: 'd-group', genki_order: 61, example_word: null, example_word_romaji: null, derives_from: 'と', diacritic: 'dakuten' },
+
+  // ── b-group (dakuten on h-group) ──────────────────────────────────────────
+  { character: 'ば', romaji: 'ba',  type: 'hiragana', group_name: 'b-group', genki_order: 62, example_word: null, example_word_romaji: null, derives_from: 'は', diacritic: 'dakuten' },
+  { character: 'び', romaji: 'bi',  type: 'hiragana', group_name: 'b-group', genki_order: 63, example_word: null, example_word_romaji: null, derives_from: 'ひ', diacritic: 'dakuten' },
+  { character: 'ぶ', romaji: 'bu',  type: 'hiragana', group_name: 'b-group', genki_order: 64, example_word: null, example_word_romaji: null, derives_from: 'ふ', diacritic: 'dakuten' },
+  { character: 'べ', romaji: 'be',  type: 'hiragana', group_name: 'b-group', genki_order: 65, example_word: null, example_word_romaji: null, derives_from: 'へ', diacritic: 'dakuten' },
+  { character: 'ぼ', romaji: 'bo',  type: 'hiragana', group_name: 'b-group', genki_order: 66, example_word: null, example_word_romaji: null, derives_from: 'ほ', diacritic: 'dakuten' },
+
+  // ── p-group (handakuten on h-group) ───────────────────────────────────────
+  { character: 'ぱ', romaji: 'pa',  type: 'hiragana', group_name: 'p-group', genki_order: 67, example_word: null, example_word_romaji: null, derives_from: 'は', diacritic: 'handakuten' },
+  { character: 'ぴ', romaji: 'pi',  type: 'hiragana', group_name: 'p-group', genki_order: 68, example_word: null, example_word_romaji: null, derives_from: 'ひ', diacritic: 'handakuten' },
+  { character: 'ぷ', romaji: 'pu',  type: 'hiragana', group_name: 'p-group', genki_order: 69, example_word: null, example_word_romaji: null, derives_from: 'ふ', diacritic: 'handakuten' },
+  { character: 'ぺ', romaji: 'pe',  type: 'hiragana', group_name: 'p-group', genki_order: 70, example_word: null, example_word_romaji: null, derives_from: 'へ', diacritic: 'handakuten' },
+  { character: 'ぽ', romaji: 'po',  type: 'hiragana', group_name: 'p-group', genki_order: 71, example_word: null, example_word_romaji: null, derives_from: 'ほ', diacritic: 'handakuten' },
 ]
 
 // ---------------------------------------------------------------------------
