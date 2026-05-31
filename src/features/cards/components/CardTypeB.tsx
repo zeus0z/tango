@@ -149,24 +149,6 @@ export function CardTypeB({ card, onAnswer, revealed = false, onReveal }: CardTy
           {card.romaji}
         </p>
 
-        {/* Optional Genki example word — shown when revealed */}
-        {revealed && card.example_word && (
-          <motion.p
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2 }}
-            lang="ja"
-            className="mt-3 text-sm text-muted-foreground font-ja"
-          >
-            {card.example_word}
-            {card.example_word_romaji && (
-              <span className="ml-2 text-muted-foreground/70">
-                ({card.example_word_romaji})
-              </span>
-            )}
-          </motion.p>
-        )}
-
         {/* Tap to reveal hint */}
         {!revealed && (
           <button
