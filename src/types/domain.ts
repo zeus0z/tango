@@ -1,5 +1,5 @@
 /**
- * Shared domain types for Nihongo Flash.
+ * Shared domain types for Tango.
  * Mirror the DB migration columns exactly (supabase/migrations/20260529000000_init.sql).
  */
 

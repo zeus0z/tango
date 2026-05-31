@@ -62,8 +62,8 @@ export default defineConfig({
         ],
       },
       manifest: {
-        name: 'Nihongo Flash',
-        short_name: 'Nihongo',
+        name: 'Tango',
+        short_name: 'Tango',
         description: 'Learn Japanese hiragana and katakana with spaced repetition',
         theme_color: '#6366f1',
         background_color: '#0f0f11',
