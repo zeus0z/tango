@@ -1,9 +1,8 @@
 /**
  * RatingButtons — Hard / Good / Easy rating buttons shown after a correct answer.
  *
- * Good is the dominant CTA (primary green, ≥56px).
- * Hard is amber-tinted, Easy is blue-tinted.
- * All buttons are at least 56px tall for comfortable tapping.
+ * All three buttons are equal width (flex-1) and equal height (≥56px).
+ * Colors follow FSRS semantic intuition: red → Hard, amber → Good, green → Easy.
  */
 
 import type { UIRating } from '@/lib/fsrs'
@@ -24,23 +23,23 @@ export function RatingButtons({ onRate, disabled = false }: RatingButtonsProps) 
         onClick={() => onRate('Hard')}
         className={cn(
           'flex-1 min-h-[56px] rounded-2xl font-semibold text-sm',
-          'bg-amber-100 text-amber-800 border border-amber-200',
-          'active:scale-95 transition-transform duration-75',
+          'bg-red-100 text-red-800 border border-red-200',
+          'active:bg-red-200 active:scale-95 transition-transform duration-75',
           'disabled:opacity-50 disabled:pointer-events-none',
         )}
       >
         Hard
       </button>
 
-      {/* Good — visually dominant */}
+      {/* Good */}
       <button
         type="button"
         disabled={disabled}
         onClick={() => onRate('Good')}
         className={cn(
-          'flex-[2] min-h-[56px] rounded-2xl font-bold text-base',
-          'bg-primary text-primary-foreground shadow-sm',
-          'active:scale-95 transition-transform duration-75',
+          'flex-1 min-h-[56px] rounded-2xl font-semibold text-sm',
+          'bg-amber-100 text-amber-800 border border-amber-200',
+          'active:bg-amber-200 active:scale-95 transition-transform duration-75',
           'disabled:opacity-50 disabled:pointer-events-none',
         )}
       >
@@ -54,8 +53,8 @@ export function RatingButtons({ onRate, disabled = false }: RatingButtonsProps) 
         onClick={() => onRate('Easy')}
         className={cn(
           'flex-1 min-h-[56px] rounded-2xl font-semibold text-sm',
-          'bg-blue-100 text-blue-800 border border-blue-200',
-          'active:scale-95 transition-transform duration-75',
+          'bg-green-100 text-green-800 border border-green-200',
+          'active:bg-green-200 active:scale-95 transition-transform duration-75',
           'disabled:opacity-50 disabled:pointer-events-none',
         )}
       >
