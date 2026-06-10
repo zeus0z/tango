@@ -16,19 +16,27 @@ import { useMemo } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import PageTransition from '@/components/PageTransition'
 import { useAppStore } from '@/lib/store'
-import type { SessionMode } from '@/types'
-import { useSessionQueueQuery, useTeachingPlanQuery } from '@/features/session/hooks/useSessionQueue'
-import { SessionCardView } from '@/features/session'
+import type { SessionMode, ScriptType } from '@/types'
+import {
+  useSessionQueueQuery,
+  useTeachingPlanQuery,
+  useInfiniteReviewQueue,
+} from '@/features/session/hooks/useSessionQueue'
+import { SessionCardView, InfiniteReviewSessionView } from '@/features/session'
 
 export default function SessionPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const session = useAppStore((s) => s.session)
-  const sessionMode =
-    (location.state as { mode?: SessionMode } | null)?.mode ?? 'learn'
+  const locationState = location.state as
+    | { mode?: SessionMode; script?: ScriptType }
+    | null
+  const sessionMode = locationState?.mode ?? 'learn'
+  const script = locationState?.script ?? 'hiragana'
 
   const userId = session?.user.id ?? ''
   const isLearnMode = sessionMode === 'learn'
+  const isInfiniteMode = sessionMode === 'infinite-review'
 
   // ── Learn mode: fetch teaching plan ──────────────────────────────────────
   const {
@@ -50,7 +58,19 @@ export default function SessionPage() {
   } = useSessionQueueQuery({
     userId,
     mode: sessionMode,
-    enabled: !!userId && !isLearnMode,
+    enabled: !!userId && !isLearnMode && !isInfiniteMode,
+  })
+
+  // ── Infinite Review: fetch all learnt cards of the chosen script ──────────
+  const {
+    data: infiniteQueue,
+    isLoading: isInfiniteLoading,
+    isError: isInfiniteError,
+    error: infiniteError,
+  } = useInfiniteReviewQueue({
+    userId,
+    script,
+    enabled: !!userId && isInfiniteMode,
   })
 
   // New card IDs for review modes (unused in learn mode)
@@ -59,9 +79,21 @@ export default function SessionPage() {
     return new Set()
   }, [queue, isLearnMode])
 
-  const isLoading = isLearnMode ? isPlanLoading : isQueueLoading
-  const isError = isLearnMode ? isPlanError : isQueueError
-  const error = isLearnMode ? planError : queueError
+  const isLoading = isLearnMode
+    ? isPlanLoading
+    : isInfiniteMode
+      ? isInfiniteLoading
+      : isQueueLoading
+  const isError = isLearnMode
+    ? isPlanError
+    : isInfiniteMode
+      ? isInfiniteError
+      : isQueueError
+  const error = isLearnMode
+    ? planError
+    : isInfiniteMode
+      ? infiniteError
+      : queueError
 
   // ---------------------------------------------------------------------------
   // Loading state
@@ -113,7 +145,9 @@ export default function SessionPage() {
   // ---------------------------------------------------------------------------
   const isEmpty = isLearnMode
     ? !teachingPlan || teachingPlan.length === 0
-    : !queue || queue.length === 0
+    : isInfiniteMode
+      ? !infiniteQueue || infiniteQueue.length === 0
+      : !queue || queue.length === 0
 
   if (isEmpty) {
     return (
@@ -121,10 +155,14 @@ export default function SessionPage() {
         <div className="flex min-h-svh flex-col items-center justify-center gap-4 px-6">
           <p className="text-2xl">🌟</p>
           <h1 className="text-xl font-bold text-foreground text-center">
-            Nothing to review right now!
+            {isInfiniteMode
+              ? `You haven't learnt any ${script} yet!`
+              : 'Nothing to review right now!'}
           </h1>
           <p className="text-muted-foreground text-sm text-center">
-            Come back later or try a different session mode.
+            {isInfiniteMode
+              ? 'Go learn some cards first, then come back to practice.'
+              : 'Come back later or try a different session mode.'}
           </p>
           <button
             type="button"
@@ -149,10 +187,12 @@ export default function SessionPage() {
           teachingPlan={teachingPlan}
           userId={userId}
         />
+      ) : isInfiniteMode ? (
+        infiniteQueue && <InfiniteReviewSessionView cards={infiniteQueue} />
       ) : (
         queue && (
           <SessionCardView
-            mode={sessionMode as Exclude<SessionMode, 'learn'>}
+            mode={sessionMode as Exclude<SessionMode, 'learn' | 'infinite-review'>}
             initialQueue={queue}
             userId={userId}
             newCardIds={newCardIds}

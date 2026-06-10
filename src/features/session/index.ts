@@ -5,16 +5,24 @@
  */
 
 export { SessionCardView } from './components/SessionCardView'
+export { InfiniteReviewSessionView } from './components/InfiniteReviewSessionView'
 export { SessionSummary } from './components/SessionSummary'
 export { SessionProgress } from './components/SessionProgress'
 export { RatingButtons } from './components/RatingButtons'
 export { IntroduceCharacter } from './components/IntroduceCharacter'
-export { useSessionQueueQuery, useTeachingPlanQuery } from './hooks/useSessionQueue'
+export {
+  useSessionQueueQuery,
+  useTeachingPlanQuery,
+  useInfiniteReviewQueue,
+  useLearntScriptCounts,
+} from './hooks/useSessionQueue'
 export {
   buildLearnQueue,
   buildLearnTeachingQueue,
   buildReviewRecentQueue,
   buildReviewAllQueue,
+  buildInfiniteReviewQueue,
+  fetchLearntScriptCounts,
   NEW_CARDS_PER_SESSION,
 } from './utils/buildSession'
 export type { TeachingItem } from './utils/buildSession'

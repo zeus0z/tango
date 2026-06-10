@@ -81,25 +81,52 @@ export function SessionModeSelector() {
 
       <div className="flex flex-col gap-2.5">
         {MODES.map(({ mode, emoji, label, description, colourClass }) => (
-          <button
-            key={mode}
-            type="button"
-            onClick={() => handleSelect(mode)}
-            className={cn(
-              'flex min-h-[56px] w-full items-center gap-3 rounded-xl border px-4 py-3 text-left',
-              'transition-colors duration-100',
-              colourClass,
+          <div key={mode} className="flex flex-col gap-1">
+            <button
+              type="button"
+              onClick={() => handleSelect(mode)}
+              className={cn(
+                'flex min-h-[56px] w-full items-center gap-3 rounded-xl border px-4 py-3 text-left',
+                'transition-colors duration-100',
+                colourClass,
+              )}
+            >
+              <span className="text-2xl" aria-hidden="true">
+                {emoji}
+              </span>
+              <div>
+                <p className="text-sm font-semibold leading-tight">{label}</p>
+                <p className="text-xs opacity-70">{description}</p>
+              </div>
+            </button>
+
+            {/* Daily spaced repetition is the primary path to fluency. */}
+            {mode === 'learn' && (
+              <p className="px-1 text-xs font-medium text-green-600">
+                Do this daily to become fluent in Japanese.
+              </p>
             )}
-          >
-            <span className="text-2xl" aria-hidden="true">
-              {emoji}
-            </span>
-            <div>
-              <p className="text-sm font-semibold leading-tight">{label}</p>
-              <p className="text-xs opacity-70">{description}</p>
-            </div>
-          </button>
+          </div>
         ))}
+
+        {/* Infinite Review — optional practice; opens a setup screen first. */}
+        <button
+          type="button"
+          onClick={() => navigate('/infinite-review')}
+          className={cn(
+            'mt-1 flex min-h-[56px] w-full items-center gap-3 rounded-xl border px-4 py-3 text-left',
+            'transition-colors duration-100',
+            'bg-purple-50 border-purple-200 text-purple-900 active:bg-purple-100',
+          )}
+        >
+          <span className="text-2xl" aria-hidden="true">
+            ♾️
+          </span>
+          <div>
+            <p className="text-sm font-semibold leading-tight">Infinite Review</p>
+            <p className="text-xs opacity-70">Practice all learnt cards</p>
+          </div>
+        </button>
       </div>
     </div>
   )

@@ -9,13 +9,15 @@
  */
 
 import { useQuery } from '@tanstack/react-query'
-import type { SessionMode, Card } from '@/types'
+import type { SessionMode, ScriptType, Card } from '@/types'
 import type { TeachingItem } from '../utils/buildSession'
 import {
   buildLearnTeachingQueue,
   buildLearnQueue,
   buildReviewRecentQueue,
   buildReviewAllQueue,
+  buildInfiniteReviewQueue,
+  fetchLearntScriptCounts,
 } from '../utils/buildSession'
 
 interface UseSessionQueueOptions {
@@ -36,6 +38,9 @@ export function useSessionQueueQuery({ userId, mode, enabled = true }: UseSessio
           return buildReviewRecentQueue(userId)
         case 'review-all':
           return buildReviewAllQueue(userId)
+        default:
+          // 'infinite-review' has its own hook (useInfiniteReviewQueue).
+          throw new Error(`useSessionQueueQuery does not handle mode: ${mode}`)
       }
     },
     enabled: enabled && !!userId,
@@ -55,5 +60,35 @@ export function useTeachingPlanQuery({ userId, enabled = true }: UseTeachingPlan
     queryFn: () => buildLearnTeachingQueue(userId),
     enabled: enabled && !!userId,
     staleTime: 0,
+  })
+}
+
+interface UseInfiniteReviewOptions {
+  userId: string
+  script: ScriptType
+  enabled?: boolean
+}
+
+/** Returns all learnt Card[] of a script — used for the Infinite Review mode. */
+export function useInfiniteReviewQueue({
+  userId,
+  script,
+  enabled = true,
+}: UseInfiniteReviewOptions) {
+  return useQuery<Card[], Error>({
+    queryKey: ['session', 'infinite', userId, script],
+    queryFn: () => buildInfiniteReviewQueue(userId, script),
+    enabled: enabled && !!userId,
+    staleTime: 0,
+  })
+}
+
+/** Per-script learnt counts — used by the Infinite Review setup screen. */
+export function useLearntScriptCounts(userId: string, enabled = true) {
+  return useQuery<Record<ScriptType, number>, Error>({
+    queryKey: ['session', 'learnt-counts', userId],
+    queryFn: () => fetchLearntScriptCounts(userId),
+    enabled: enabled && !!userId,
+    staleTime: 30_000,
   })
 }

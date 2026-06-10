@@ -13,6 +13,15 @@ dist
 dist-ssr
 *.local
 
+# Playwright
+/test-results
+/playwright-report
+/playwright/.cache
+/screenshots
+
+# Vitest
+/coverage
+
 
 CLAUDE.md
 

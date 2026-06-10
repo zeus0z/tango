@@ -14,6 +14,7 @@ import { Volume2 } from 'lucide-react'
 import type { Card } from '@/types'
 import { Button } from '@/components/ui/button'
 import { AnswerFeedback, type FeedbackState } from './AnswerFeedback'
+import { MnemonicViewer } from './MnemonicViewer'
 import { RomajiGrid } from './RomajiGrid'
 import { cn } from '@/lib/utils'
 import { speakHiragana } from '../utils/speak'
@@ -120,8 +121,8 @@ export function CardTypeA({ card, onAnswer, revealed = false, onReveal, mnemonic
         </motion.div>
       )}
 
-      {/* ── Mnemonic affordance (shown only when revealed + mnemonic exists) ─ */}
-      {revealed && card.mnemonic && (
+      {/* ── Mnemonic affordance (shown only when revealed + mnemonics exist) ─ */}
+      {revealed && card.mnemonics_pt && card.mnemonics_pt.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
@@ -138,15 +139,17 @@ export function CardTypeA({ card, onAnswer, revealed = false, onReveal, mnemonic
                 💡 Show mnemonic
               </Button>
               {mnemonicOpen && (
-                <p className="text-sm text-muted-foreground italic line-clamp-3 px-1">
-                  {card.mnemonic}
-                </p>
+                <MnemonicViewer
+                  mnemonics={card.mnemonics_pt}
+                  textClassName="text-muted-foreground px-1"
+                />
               )}
             </>
           ) : (
-            <p className="text-sm text-muted-foreground italic line-clamp-3 px-1">
-              {card.mnemonic}
-            </p>
+            <MnemonicViewer
+              mnemonics={card.mnemonics_pt}
+              textClassName="text-muted-foreground px-1"
+            />
           )}
         </motion.div>
       )}

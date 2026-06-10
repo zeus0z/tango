@@ -27,7 +27,8 @@ export interface Card {
   genki_order: number
   example_word?: string | null
   example_word_romaji?: string | null
-  mnemonic?: string | null
+  /** PT-BR memory hooks (≈2 per base card), primary first. Derived cards inherit the base's. */
+  mnemonics_pt?: string[] | null
   derives_from?: string | null
   diacritic?: 'dakuten' | 'handakuten' | null
 }
@@ -72,4 +73,7 @@ export interface ReviewLog {
 export type MasteryState = 'Unseen' | 'Learning' | 'Review' | 'Mastered'
 
 /** Study session mode selected by the user on the home screen. */
-export type SessionMode = 'learn' | 'review-recent' | 'review-all'
+export type SessionMode = 'learn' | 'review-recent' | 'review-all' | 'infinite-review'
+
+/** Writing script a card belongs to — also used to filter Infinite Review. */
+export type ScriptType = Card['type']

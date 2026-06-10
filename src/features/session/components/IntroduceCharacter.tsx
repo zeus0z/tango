@@ -16,6 +16,7 @@ import { Volume2, ArrowRight } from 'lucide-react'
 import type { Card } from '@/types'
 import { Button } from '@/components/ui/button'
 import { DIACRITICS } from '@/lib/constants/diacritics'
+import { MnemonicViewer } from '@/features/cards/components/MnemonicViewer'
 import { speakHiragana } from '@/features/cards/utils/speak'
 import { cn } from '@/lib/utils'
 
@@ -107,7 +108,7 @@ function SoloIntro({ card }: { card: Card }) {
       </div>
 
       {/* Mnemonic — shown by default */}
-      {card.mnemonic && (
+      {card.mnemonics_pt && card.mnemonics_pt.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
@@ -117,7 +118,7 @@ function SoloIntro({ card }: { card: Card }) {
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
             Memory hook
           </p>
-          <p className="text-sm text-foreground italic">{card.mnemonic}</p>
+          <MnemonicViewer mnemonics={card.mnemonics_pt} textClassName="text-foreground" />
         </motion.div>
       )}
     </>
@@ -191,7 +192,7 @@ function PairIntro({ card, derived }: { card: Card; derived: Card }) {
       </motion.div>
 
       {/* Base mnemonic — shown by default */}
-      {card.mnemonic && (
+      {card.mnemonics_pt && card.mnemonics_pt.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
@@ -201,7 +202,7 @@ function PairIntro({ card, derived }: { card: Card; derived: Card }) {
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
             Memory hook ({card.romaji})
           </p>
-          <p className="text-sm text-foreground italic">{card.mnemonic}</p>
+          <MnemonicViewer mnemonics={card.mnemonics_pt} textClassName="text-foreground" />
         </motion.div>
       )}
     </>

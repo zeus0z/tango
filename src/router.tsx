@@ -16,6 +16,7 @@ const LandingPage = lazy(() => import('@/pages/LandingPage'))
 const LoginPage = lazy(() => import('@/pages/LoginPage'))
 const HomePage = lazy(() => import('@/pages/HomePage'))
 const SessionPage = lazy(() => import('@/pages/SessionPage'))
+const InfiniteReviewPage = lazy(() => import('@/pages/InfiniteReviewPage'))
 const ProgressPage = lazy(() => import('@/pages/ProgressPage'))
 
 // ---------------------------------------------------------------------------
@@ -120,6 +121,14 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<PageLoader />}>
             <SessionPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: '/infinite-review',
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <InfiniteReviewPage />
           </Suspense>
         ),
       },

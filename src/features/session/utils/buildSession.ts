@@ -6,7 +6,7 @@
  */
 
 import { supabase } from '@/lib/supabase'
-import type { Card } from '@/types'
+import type { Card, ScriptType } from '@/types'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -311,4 +311,75 @@ export async function buildReviewAllQueue(userId: string): Promise<Card[]> {
 
   if (cardsError) throw cardsError
   return (cards ?? []) as Card[]
+}
+
+// ---------------------------------------------------------------------------
+// Infinite Review Mode (PER-26)
+// All LEARNT cards (reps > 0) of one script, regardless of due date.
+// Pure practice — callers must NOT persist FSRS state for these cards.
+// ---------------------------------------------------------------------------
+export async function buildInfiniteReviewQueue(
+  userId: string,
+  script: ScriptType,
+): Promise<Card[]> {
+  // Learnt = has a progress row with at least one repetition.
+  const { data: progressRows, error } = await supabase
+    .from('user_card_progress')
+    .select('card_id')
+    .eq('user_id', userId)
+    .gt('reps', 0)
+
+  if (error) throw error
+
+  const cardIds = (progressRows ?? []).map((r) => r.card_id as string)
+  if (cardIds.length === 0) return []
+
+  const { data: cards, error: cardsError } = await supabase
+    .from('cards')
+    .select('*')
+    .in('id', cardIds)
+    .eq('type', script)
+    .order('genki_order', { ascending: true })
+
+  if (cardsError) throw cardsError
+  return (cards ?? []) as Card[]
+}
+
+/**
+ * Count learnt cards (reps > 0) per script for the Infinite Review setup screen.
+ * Drives which script options are enabled.
+ */
+export async function fetchLearntScriptCounts(
+  userId: string,
+): Promise<Record<ScriptType, number>> {
+  const counts: Record<ScriptType, number> = {
+    hiragana: 0,
+    katakana: 0,
+    kanji: 0,
+  }
+
+  const { data: progressRows, error } = await supabase
+    .from('user_card_progress')
+    .select('card_id')
+    .eq('user_id', userId)
+    .gt('reps', 0)
+
+  if (error) throw error
+
+  const cardIds = (progressRows ?? []).map((r) => r.card_id as string)
+  if (cardIds.length === 0) return counts
+
+  const { data: cards, error: cardsError } = await supabase
+    .from('cards')
+    .select('type')
+    .in('id', cardIds)
+
+  if (cardsError) throw cardsError
+
+  for (const card of cards ?? []) {
+    const type = (card as { type: ScriptType }).type
+    if (type in counts) counts[type] += 1
+  }
+
+  return counts
 }
