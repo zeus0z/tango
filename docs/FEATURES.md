@@ -13,8 +13,9 @@
 ## 2. Landing Page (`/`)
 
 The only public-facing page. Must be polished enough to advertise the app.
-Content: headline, short description, login/signup CTA, preview of the card UI.
+Content: headline, short description, login/signup CTA.
 This is the only page where SEO matters — use proper meta tags and Open Graph.
+Single centered column on all breakpoints, sized to fit one viewport — no scrolling.
 
 ---
 
@@ -148,8 +149,9 @@ A **secondary, optional** practice mode. Unlike spaced repetition (which surface
 - shadcn `input.tsx` and `label.tsx` primitives were added by this issue.
 
 ### §2 Landing (PER-12)
-- `LandingPage` reuses the real `CardTypeA` from `src/features/cards/` for the card preview (wrapped non-interactive in `src/features/landing/CardPreview.tsx` with `pointer-events: none`).
 - Full SEO / OG / Twitter Card head tags injected via `index.html`; PWA manifest + icon links stay owned by F8.
+- Trimmed to a single centered column with no card preview, so the whole page fits one
+  viewport (mobile and desktop) without scrolling.
 
 ### §3 Home (PER-15)
 - `AlphabetProgressMap` lives at `src/components/AlphabetProgressMap.tsx` (shared — PER-16 imports it). Props: `{ progress: Record<string, MasteryState>; size?: 'sm' | 'md' | 'lg'; onCellPress?: (character: string) => void }`. Home uses `size='sm'` non-interactive; Progress uses `size='lg'` with `onCellPress`.
