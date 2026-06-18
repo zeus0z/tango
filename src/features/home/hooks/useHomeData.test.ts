@@ -1,4 +1,13 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
+
+// Importing './useHomeData' transitively pulls in home.service -> lib/supabase,
+// which calls createClient() at module load. Mock it so this file doesn't need
+// VITE_SUPABASE_URL to be set (e.g. in CI, where there's no .env.local).
+vi.mock('@/lib/supabase', async () => {
+  const { createSupabaseMock } = await import('@/test/supabase-mock')
+  return { supabase: createSupabaseMock({}) }
+})
+
 import { fsrsStateToMastery } from './useHomeData'
 
 /**
