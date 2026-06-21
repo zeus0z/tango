@@ -381,4 +381,12 @@ Templates 1–5 share the same shell with a `{{ .ConfirmationURL }}` action butt
 ## Future polish
 
 - Replace the `<div lang="ja">単語</div>` text mark with a real logo image once available (host in a Supabase Storage public bucket; reference via `<img>` tag).
-- Consider adding a custom SMTP provider (Resend / Postmark / SendGrid) before production launch — Supabase's built-in mail is rate-limited and uses a generic `*.supabase.co` sender domain.
+- Consider adding a custom SMTP provider before production launch — Supabase's built-in mail is rate-limited (2 emails/hour project-wide on the free tier with no custom SMTP) and uses a generic `*.supabase.co` sender domain.
+
+### Status (2026-06-21): email/password sign-in disabled, Google-only for now
+
+The 2/hour cap above is what broke registration emails in practice. Evaluated **Resend** as the fix: custom SMTP swap (paste creds into Supabase Dashboard → Auth → SMTP Settings), zero new code, and these templates paste into the dashboard's template editor verbatim — no rework needed.
+
+Deferred for now, not because Resend is wrong, but because of a sequencing issue: Resend's no-domain sandbox sender (`onboarding@resend.dev`) only delivers to the Resend account owner's own address, not arbitrary recipients — and this project doesn't have a verified domain yet. Since real distinct users need to be able to sign up now, email/password was commented out in `LoginPage.tsx` (state, handlers, and form all preserved in a block comment, not deleted) and **Google OAuth is the only sign-in method** until this is revisited. See `docs/FEATURES.md` §1 Auth implementation notes.
+
+To re-enable email/password: buy/verify a domain with Resend, configure custom SMTP in the Supabase Dashboard, paste these templates into the dashboard editor unchanged, then uncomment the email/password block in `LoginPage.tsx` and restore the `tests/e2e/public.spec.ts` assertions for the tab toggle + form fields.

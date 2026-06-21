@@ -1,29 +1,27 @@
 /**
- * LoginPage — sign-in / sign-up with Google OAuth or email + password.
+ * LoginPage — sign-in with Google OAuth.
  *
  * UX:
- * - Single page with a tab toggle: "Sign in" / "Sign up"
  * - Google OAuth button (primary CTA, full-width)
- * - Divider
- * - Email + Password form
  * - After success → navigate to /home
  * - Errors → toast (sonner)
+ *
+ * Email/password is temporarily disabled — see docs/email-templates.md
+ * "Future polish" for why (Supabase's built-in mailer caps confirmation
+ * emails at 2/hour with no custom SMTP configured yet).
  *
  * Mobile-first: tap targets ≥48px, active: states, safe-area padding.
  */
 
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import Layout from '@/components/Layout'
 import PageTransition from '@/components/PageTransition'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 
-import { signInWithEmail, signUpWithEmail, signInWithGoogle } from '@/features/auth/authService'
+import { signInWithGoogle } from '@/features/auth/authService'
 
 // ---------------------------------------------------------------------------
 // Google icon (inline SVG — no extra dep)
@@ -61,28 +59,8 @@ function GoogleIcon() {
 // LoginPage
 // ---------------------------------------------------------------------------
 
-type Tab = 'signin' | 'signup'
-
 export default function LoginPage() {
-  const navigate = useNavigate()
-
-  const [tab, setTab] = useState<Tab>('signin')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
-
-  // ── Helpers ──────────────────────────────────────────────────────────────
-
-  function resetForm() {
-    setEmail('')
-    setPassword('')
-  }
-
-  function switchTab(next: Tab) {
-    setTab(next)
-    resetForm()
-  }
 
   // ── Google OAuth ──────────────────────────────────────────────────────────
 
@@ -101,40 +79,7 @@ export default function LoginPage() {
     }
   }
 
-  // ── Email / password ──────────────────────────────────────────────────────
-
-  async function handleEmailSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!email.trim() || !password) return
-
-    setLoading(true)
-    try {
-      if (tab === 'signup') {
-        const { error } = await signUpWithEmail(email.trim(), password)
-        if (error) {
-          toast.error(error.message || 'Sign-up failed. Please try again.')
-          return
-        }
-        toast.success('Account created! Check your email to confirm, then sign in.')
-        switchTab('signin')
-      } else {
-        const { error } = await signInWithEmail(email.trim(), password)
-        if (error) {
-          toast.error(error.message || 'Sign-in failed. Check your credentials.')
-          return
-        }
-        navigate('/home', { replace: true })
-      }
-    } catch {
-      toast.error('Something went wrong. Please try again.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
   // ── Render ────────────────────────────────────────────────────────────────
-
-  const isSignUp = tab === 'signup'
 
   return (
     <PageTransition>
@@ -149,44 +94,8 @@ export default function LoginPage() {
           {/* ── Auth card ── */}
           <Card className="w-full max-w-sm">
             <CardHeader className="pb-4">
-              {/* Tab toggle */}
-              <div className="flex rounded-lg bg-muted p-1">
-                <button
-                  type="button"
-                  onClick={() => switchTab('signin')}
-                  className={[
-                    'flex-1 rounded-md py-2 text-sm font-medium transition-colors select-none',
-                    'active:opacity-80',
-                    tab === 'signin'
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground',
-                  ].join(' ')}
-                >
-                  Sign in
-                </button>
-                <button
-                  type="button"
-                  onClick={() => switchTab('signup')}
-                  className={[
-                    'flex-1 rounded-md py-2 text-sm font-medium transition-colors select-none',
-                    'active:opacity-80',
-                    tab === 'signup'
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground',
-                  ].join(' ')}
-                >
-                  Sign up
-                </button>
-              </div>
-
-              <CardTitle className="text-lg">
-                {isSignUp ? 'Create your account' : 'Welcome back'}
-              </CardTitle>
-              <CardDescription>
-                {isSignUp
-                  ? 'Start your hiragana journey today.'
-                  : 'Sign in to continue your practice.'}
-              </CardDescription>
+              <CardTitle className="text-lg">Welcome to Tango</CardTitle>
+              <CardDescription>Sign in with Google to start your hiragana journey.</CardDescription>
             </CardHeader>
 
             <CardContent className="flex flex-col gap-4">
@@ -195,7 +104,7 @@ export default function LoginPage() {
                 type="button"
                 variant="outline"
                 className="w-full gap-3"
-                disabled={googleLoading || loading}
+                disabled={googleLoading}
                 onClick={handleGoogleSignIn}
                 aria-label="Continue with Google"
               >
@@ -203,14 +112,16 @@ export default function LoginPage() {
                 <span>Continue with Google</span>
               </Button>
 
-              {/* ── Divider ── */}
+              {/* Email/password sign-in is temporarily disabled — see the
+                  file header comment above for why. Re-enable once a custom
+                  SMTP provider (docs/email-templates.md) is configured:
+
               <div className="flex items-center gap-3">
                 <div className="h-px flex-1 bg-border" />
                 <span className="text-muted-foreground text-xs">or</span>
                 <div className="h-px flex-1 bg-border" />
               </div>
 
-              {/* ── Email + Password form ── */}
               <form onSubmit={handleEmailSubmit} className="flex flex-col gap-4" noValidate>
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="auth-email">Email</Label>
@@ -254,6 +165,7 @@ export default function LoginPage() {
                       : 'Sign in'}
                 </Button>
               </form>
+              */}
             </CardContent>
           </Card>
         </div>

@@ -14,17 +14,10 @@ test.describe('public routes', () => {
     await expect(page.getByRole('link', { name: /Log in/i })).toBeVisible()
   })
 
-  test('login page renders auth tabs + email form', async ({ page }) => {
+  test('login page renders Google sign-in', async ({ page }) => {
     await page.goto('/login')
 
-    // Tab toggle + heading ("Sign up" is unique; the signin-tab submit button
-    // also reads "Sign in", so assert the card heading instead of that tab).
-    await expect(page.getByRole('button', { name: 'Sign up' })).toBeVisible()
-    await expect(page.getByRole('heading', { name: /Welcome back/i })).toBeVisible()
-
-    // Email + password form
-    await expect(page.getByLabel('Email')).toBeVisible()
-    await expect(page.getByLabel('Password')).toBeVisible()
+    await expect(page.getByRole('heading', { name: /Welcome to Tango/i })).toBeVisible()
     await expect(page.getByRole('button', { name: /Continue with Google/i })).toBeVisible()
   })
 })
