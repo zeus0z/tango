@@ -169,6 +169,8 @@ create trigger on_auth_user_created
   for each row execute procedure handle_new_user();
 ```
 
+`handle_new_user` is `SECURITY DEFINER` and pinned with `set search_path = ''` (all refs inside are schema-qualified). `EXECUTE` is revoked from `public`/`anon`/`authenticated` since it must only run via the trigger, never as a direct `/rest/v1/rpc/handle_new_user` call — see `supabase/migrations/20260619000000_harden_handle_new_user.sql`.
+
 ---
 
 ## Supabase Edge Functions (future)
@@ -189,3 +191,4 @@ Do not build these yet. When ready, create under `supabase/functions/`.
 - **FSRS persistence** (PER-14): `src/features/session/utils/persistReview.ts` calls `f.repeat(card, now)[rating].card` and upserts the FULL FSRS state to `user_card_progress`, then inserts a `review_logs` row with `rating` + `was_correct` (anything other than `Again` is correct). The ts-fsrs numeric `State` enum ↔ DB string mapping happens in this file.
 - **Mastery mapping** (PER-15, reused by PER-16): not a DB column — derived client-side in `src/features/home/hooks/useHomeData.ts` `fsrsStateToMastery`. Rule: `state === 'Review'` AND `stability >= 21` days → `Mastered`; otherwise the FSRS state name maps 1:1 (`New` → `Unseen`, `Learning` stays, `Review` stays).
 - **Reads** (PER-15/16): TanStack Query hooks wrap thin service files. Service files at `src/features/{home,progress}/services/<name>.service.ts` import the Supabase singleton from `src/lib/supabase.ts`. Joins (e.g. `user_card_progress → cards(character)`) normalise the array-vs-object shape with an explicit cast.
+- **Linter hardening** (2026-06-19): `supabase/migrations/20260619000000_harden_handle_new_user.sql` fixes the Supabase database linter's `function_search_path_mutable` and `anon`/`authenticated_security_definer_function_executable` warnings on `handle_new_user`. The linter's third warning, `auth_leaked_password_protection`, is a Dashboard-only toggle (Authentication → Providers → Email → "Prevent use of leaked passwords") and requires the **Pro plan** — not fixable via migration while on the free tier (see `docs/STACK.md`).
