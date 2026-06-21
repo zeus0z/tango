@@ -2,7 +2,7 @@
 
 ## 1. Authentication
 
-- Supported methods: **Google OAuth** and **Email + Password**
+- Supported methods: **Google OAuth** (primary) — **Email + Password** is temporarily disabled, see Implementation Notes below
 - All routes except `/` (landing page) require authentication
 - On first login, a user profile and progress record is created automatically
 - Auth state is managed via Supabase Auth and persisted via the Supabase JS client
@@ -143,8 +143,8 @@ A **secondary, optional** practice mode. Unlike spaced repetition (which surface
 
 ### §1 Auth (PER-11)
 - `src/features/auth/` — `useAuth` hook + `AppAuthProvider` (mounted once between `ErrorBoundary` and the router in `App.tsx`) subscribe to `supabase.auth.onAuthStateChange` and sync the session into the Zustand auth slot.
-- `LoginPage` has a tabbed Sign in / Sign up form, Google OAuth button, and email/password fields. Auth errors → sonner toast. On success: `navigate('/home')`.
-- Google OAuth uses `supabase.auth.signInWithOAuth({ provider: 'google' })`; the redirect URL is configured in the Supabase project, not in the client.
+- `LoginPage` shows Google OAuth only — the tab toggle and email/password form are commented out in place (not deleted), pending a custom SMTP provider. See `docs/email-templates.md` "Future polish". Auth errors → sonner toast. On success: `navigate('/home')`.
+- Google OAuth uses `supabase.auth.signInWithOAuth({ provider: 'google' })`; the redirect URL is configured in the Supabase project, not in the client. The Google provider must be enabled in Supabase Dashboard → Authentication → Providers with a Google Cloud OAuth Client ID/Secret, and the consent screen must be published to **Production** (not Testing — Testing's 100-user allow-list blocks anyone not manually added).
 - Profile + initial progress rows are created server-side by the `handle_new_user` trigger from D1.
 - shadcn `input.tsx` and `label.tsx` primitives were added by this issue.
 
