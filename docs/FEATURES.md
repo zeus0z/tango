@@ -64,12 +64,22 @@ Shown after login. Displays:
 3. One card shown at a time, full screen, distraction-free
 4. Progress bar at top: "Card 6 of 13"
 5. User answers (taps a choice)
-6. Result is revealed immediately (correct/incorrect highlight)
-7. Rating buttons appear:
-   - If **wrong**: card is automatically rated **Again** — no buttons shown, card re-enters queue
-   - If **correct**: show 3 buttons — **Hard**, **Good**, **Easy**
-8. On rating, FSRS schedules the next review and saves to DB
-9. Session ends when queue is empty → summary screen
+6. Result is revealed and **stays visible** (correct/incorrect highlight does not
+   auto-clear) until the user taps **Next**
+7. What happens next depends on the mode and the answer:
+   - **Wrong** (any mode): auto-rated **Again**, card re-enters the queue — no rating
+     buttons, just a **Next** button once the marking has been seen
+   - **Correct, Learn mode**: silently auto-rated **Good** in the background (Learn
+     mode never asks the user to judge difficulty — that's a Review-mode concern) —
+     just a **Next** button
+   - **Correct, Review Recent / Review All**: show 3 rating buttons — **Hard**,
+     **Good**, **Easy** — picking one both rates and advances
+   - **Correct or wrong, Infinite Review**: just a **Next** button either way — this
+     mode never rates or persists anything (see §5.5)
+8. On rating (automatic or user-chosen), FSRS schedules the next review and saves to
+   DB — except Infinite Review, which never writes to FSRS
+9. Session ends when queue is empty → summary screen (Infinite Review has no end —
+   see §5.5)
 
 ### Session Summary Screen
 - Total cards reviewed
@@ -79,8 +89,9 @@ Shown after login. Displays:
 
 ### Card Animation
 - Smooth transition between cards (Framer Motion)
-- Correct answer: green highlight flash
-- Wrong answer: red highlight + shake animation
+- Correct answer: green highlight, animates in then **stays** (does not fade back out)
+- Wrong answer: red highlight + shake animation, then **stays** red on the tapped
+  option with the correct option marked green, until **Next** is tapped
 
 ---
 
@@ -99,7 +110,9 @@ A **secondary, optional** practice mode. Unlike spaced repetition (which surface
 
 ### Session flow
 1. Loads all learnt cards of the chosen script (any state, `reps > 0`), shuffled.
-2. One Type B card at a time; reveal then self-mark correct / incorrect. No FSRS rating buttons (no scheduling).
+2. One Type B card at a time; reveal then self-mark correct / incorrect. Feedback
+   stays on screen and a **Next** button appears — no FSRS rating buttons (no
+   scheduling) either way.
 3. Wrong answers requeue toward the end.
 4. When the queue is exhausted it **reshuffles and restarts** — the session never auto-ends.
 5. A header shows an **Exit** button (→ Home) and a running "X reviewed this session" counter. No summary screen.
@@ -165,14 +178,17 @@ A **secondary, optional** practice mode. Unlike spaced repetition (which surface
 - Type A back is a 10×5 grid + lone `n` + backspace + blue checkmark, matching `docs/sounds_options.jpeg` exactly. Romaji uses `'fu'` for ふ (not `'hu'`) — must match `hiragana.ts`.
 - Type B picks 5 distractors via `getDistractors` from `src/lib/constants/distractors.ts` (same-phonetic-family preference).
 - Presentational only — `(card, onAnswer)` in, no Supabase / no FSRS / no data fetching. The session screen wires those.
-- Animations: correct → green flash; wrong → red flash + horizontal shake (Framer Motion).
+- Animations: correct → green flash that **holds** on green; wrong → red flash + horizontal shake that **holds** on red (tapped option) + green (correct option). `onAnswer` fires once the hold begins; the session view (not the card) decides when to actually advance, via a Next button.
+- Option order: CardTypeB shuffles correct + 5 distractors with `Math.random()` on every mount (not seeded by `card.id`) — the same card shows a different tile layout every time it's presented.
 
 ### §5 Session (PER-14)
 - Queue builders in `src/features/session/utils/buildSession.ts` (Learn / Review Recent / Review All) hit Supabase directly per the "Session Building Logic" section of `docs/DATABASE.md`. New-first merge for Learn mode.
 - `persistReview.ts` runs `ts-fsrs.repeat()`, persists the full FSRS card state to `user_card_progress`, and appends a `review_logs` row. `was_correct` is `true` for Hard/Good/Easy and `false` for Again. Maps ts-fsrs `State` enum ↔ DB string.
 - Card-type selection: Type A for unseen/Learning cards (recognition); Type B for Review (recall).
-- Wrong answers auto-rate `Again` and requeue at the END of the queue, so the user re-sees them before the session ends.
-- Rating buttons (`RatingButtons.tsx`): Hard (amber, secondary) / **Good (primary, ≥56px, flex-2)** / Easy (blue).
+- Wrong answers auto-rate `Again` and requeue at the END of the queue, so the user re-sees them before the session ends — the requeue/advance is now deferred to an explicit `NextButton` tap rather than firing automatically.
+- **Learn mode never shows rating buttons.** `TeachingSessionView` auto-rates every correct drill answer `Good` (no user choice) and every wrong one `Again` (unchanged), then shows `NextButton` either way. `RatingButtons.tsx` is not imported here at all.
+- Rating buttons (`RatingButtons.tsx`): Hard (amber, secondary) / **Good (primary, ≥56px, flex-2)** / Easy (blue) — used **only** by `ReviewSessionView`'s correct-answer path (Review Recent / Review All). Its wrong-answer path uses `NextButton` like everywhere else.
+- `NextButton.tsx`: single CTA, styled like `IntroduceCharacter`'s "Got it →" button. Used for: Learn mode (both outcomes), Review Recent/All's wrong-answer path, and Infinite Review (both outcomes, see §5.5).
 - Summary screen derives counters from session-local state, then "return home" → `/home`.
 - Session-internal state (queue, queue index, daily counters) lives in the Zustand `studySession` + `dailyProgress` slots.
 
@@ -180,7 +196,7 @@ A **secondary, optional** practice mode. Unlike spaced repetition (which surface
 - Read-only queue builder `buildInfiniteReviewQueue(userId, script)` in `buildSession.ts`: like Review All but **no `due` filter** and `.eq('type', script)`; "learnt" = `user_card_progress.reps > 0`. `fetchLearntScriptCounts(userId)` returns per-script learnt counts to drive the setup screen's enable/disable.
 - Hooks: `useInfiniteReviewQueue` + `useLearntScriptCounts` in `useSessionQueue.ts`.
 - Setup screen `src/pages/InfiniteReviewPage.tsx` (route `/infinite-review`): single-select script chooser → `navigate('/session', { state: { mode: 'infinite-review', script } })`.
-- `InfiniteReviewSessionView.tsx`: adapted from `ReviewSessionView` but **zero persistence** — no `persistReview`, no `fetchCardProgress`, no `incrementReviewed/incrementLearned`. Loops forever (reshuffle on exhaustion), Exit button → `/home`, no `SessionSummary`.
+- `InfiniteReviewSessionView.tsx`: adapted from `ReviewSessionView` but **zero persistence** — no `persistReview`, no `fetchCardProgress`, no `incrementReviewed/incrementLearned`. Loops forever (reshuffle on exhaustion), Exit button → `/home`, no `SessionSummary`. Both correct and wrong answers show a `NextButton` (feedback stays visible) rather than calling `advance()` immediately — same pacing as every other mode, still with no rating and no persistence.
 - `SessionPage` branches on `mode === 'infinite-review'` before the learn/review split, reusing the loading/error/empty scaffolding.
 
 ### §7 Progress (PER-16)

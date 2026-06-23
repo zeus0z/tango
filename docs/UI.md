@@ -52,8 +52,8 @@ The card is the centrepiece of the app. It must feel substantial and tactile.
 - Card surface has soft shadow and rounded corners (`rounded-3xl`)
 - Answer choices are large tap targets — minimum `48px` height, comfortable padding
 - No hover states as primary feedback — use `active:` states for tap feedback
-- Correct answer: green background flash, smooth transition
-- Wrong answer: red background flash + horizontal shake animation (Framer Motion)
+- Correct answer: green background flash that **holds** on green until the user taps Next
+- Wrong answer: red background flash + horizontal shake animation (Framer Motion), holding on red (tapped option) + green (correct option) until the user taps Next
 
 ---
 
@@ -71,12 +71,15 @@ All route changes use a shared `PageTransition` wrapper:
 ```
 
 ### Card Answer Feedback
+Feedback holds on the final color instead of fading back to white — `onAnswer`
+fires once the hold begins, but the session view waits for an explicit **Next**
+tap before advancing.
 ```tsx
-// Correct
-animate={{ backgroundColor: ['#fff', '#dcfce7', '#fff'] }}
+// Correct — ends on green, stays
+animate={{ backgroundColor: ['#fff', '#dcfce7'] }}
 
-// Wrong — shake
-animate={{ x: [0, -8, 8, -8, 8, 0] }}
+// Wrong — shake, ends on red, stays
+animate={{ x: [0, -8, 8, -8, 8, 0], backgroundColor: ['#fff', '#fee2e2'] }}
 transition={{ duration: 0.4 }}
 ```
 
@@ -164,10 +167,12 @@ Keep toasts brief, non-blocking, and auto-dismissed after 3 seconds.
 - **Layout shell** is at `src/components/Layout.tsx`; page transitions at `src/components/PageTransition.tsx` (the Framer Motion `PageTransitions` snippet above is the live pattern).
 - **Mastery cells** in `AlphabetProgressMap` use the Tailwind tokens from the Mastery State Colours table above — match those classes if adding new state-coloured surfaces elsewhere.
 - **Card answer animations** (shipped in PER-13 `AnswerFeedback`):
-  - Correct: `backgroundColor: ['#ffffff', '#dcfce7', '#ffffff']` flash.
-  - Wrong: `backgroundColor: ['#ffffff', '#fee2e2', '#ffffff']` red flash AND `x: [0, -8, 8, -8, 8, 0]` horizontal shake.
+  - Correct: `backgroundColor: ['#ffffff', '#dcfce7']` flash, holds on green.
+  - Wrong: `backgroundColor: ['#ffffff', '#fee2e2']` red flash (holds on red) AND `x: [0, -8, 8, -8, 8, 0]` horizontal shake.
+  - The hold is intentional: `onAnswer` fires when the hold begins, but advancing to the next card/item always waits for a `NextButton` tap — no card surface auto-advances.
 - **Tap target sizing actually enforced in shipped code:**
-  - Session rating buttons: ≥56px height. Good (primary) is visually dominant via `flex-2`.
+  - Session rating buttons: ≥56px height. Good (primary) is visually dominant via `flex-2`. Used only by Review Recent/All's correct-answer path.
+  - `NextButton`: ≥56px height, same styling as `IntroduceCharacter`'s "Got it →" CTA. Used everywhere else an answer needs acknowledging.
   - Session mode buttons on /home: ≥56px tall, full-width.
   - Weak cards / list rows: ≥48px.
   - shadcn `input.tsx` primitive: ≥48px.

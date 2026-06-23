@@ -22,6 +22,7 @@ import type { UIRating } from '@/lib/fsrs'
 import { persistReview, fetchCardProgress } from '../utils/persistReview'
 import type { TeachingItem } from '../utils/buildSession'
 import { RatingButtons } from './RatingButtons'
+import { NextButton } from './NextButton'
 import { SessionProgress } from './SessionProgress'
 import { SessionSummary } from './SessionSummary'
 import { IntroduceCharacter } from './IntroduceCharacter'
@@ -81,8 +82,9 @@ function TeachingSessionView({ teachingPlan, userId }: TeachingSessionProps) {
   const [plan, setPlan] = useState<TeachingItem[]>(teachingPlan)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [revealed, setRevealed] = useState(false)
-  const [showRatingButtons, setShowRatingButtons] = useState(false)
-  const [ratingDisabled, setRatingDisabled] = useState(false)
+  const [showNextButton, setShowNextButton] = useState(false)
+  const [nextDisabled, setNextDisabled] = useState(false)
+  const [pendingWrong, setPendingWrong] = useState(false)
   const [direction, setDirection] = useState<1 | -1>(1)
   const [done, setDone] = useState(false)
   const [totalItems, setTotalItems] = useState(teachingPlan.length)
@@ -113,8 +115,8 @@ function TeachingSessionView({ teachingPlan, userId }: TeachingSessionProps) {
     } else {
       setCurrentIndex(nextIndex)
       setRevealed(false)
-      setShowRatingButtons(false)
-      setRatingDisabled(false)
+      setShowNextButton(false)
+      setNextDisabled(false)
     }
   }, [currentIndex, plan.length])
 
@@ -153,77 +155,65 @@ function TeachingSessionView({ teachingPlan, userId }: TeachingSessionProps) {
   }, [currentItem, newLearnedIds, incrementLearned, advanceToNext])
 
   // -------------------------------------------------------------------------
-  // Handle answer from a drill card
+  // Handle answer from a drill card.
+  //
+  // Learn mode never asks the user to judge difficulty — every correct
+  // drill answer auto-rates 'Good', every wrong one auto-rates 'Again' (as
+  // before). Persistence happens immediately; advancing/requeuing is
+  // deferred to handleDrillNext so the feedback colors stay visible until
+  // the user explicitly taps "Next".
   // -------------------------------------------------------------------------
   const handleDrillAnswer = useCallback(
     async (correct: boolean) => {
       if (!currentItem || currentItem.kind !== 'drill') return
 
-      if (!correct) {
-        // Wrong: auto-rate Again, requeue at end of plan
-        try {
-          const progress = await fetchCardProgress(userId, currentItem.card.id)
-          await persistReview(userId, currentItem.card.id, 'Again', progress)
-        } catch (err) {
-          console.error('Failed to persist review:', err)
-          toast.error('Could not save review — check your connection.')
-        }
-
-        setStats((prev) => ({
-          ...prev,
-          totalReviewed: prev.totalReviewed + 1,
-        }))
-        incrementReviewed()
-
-        // Requeue the same item at the end
-        setPlan((prev) => {
-          const updated = [...prev]
-          const item = updated[currentIndex]
-          updated.splice(currentIndex, 1)
-          updated.push(item)
-          return updated
-        })
-        setTotalItems((n) => n + 1)
-
-        // Advance (index stays same since we removed current)
-        setDirection(1)
-        setRevealed(false)
-        setShowRatingButtons(false)
-      } else {
-        // Correct: show rating buttons
-        setShowRatingButtons(true)
-      }
-    },
-    [currentItem, currentIndex, userId, incrementReviewed],
-  )
-
-  // -------------------------------------------------------------------------
-  // Handle rating for a drill card
-  // -------------------------------------------------------------------------
-  const handleDrillRate = useCallback(
-    async (rating: UIRating) => {
-      if (!currentItem || currentItem.kind !== 'drill' || ratingDisabled) return
-      setRatingDisabled(true)
-
       try {
-        const cardProgress = await fetchCardProgress(userId, currentItem.card.id)
-        await persistReview(userId, currentItem.card.id, rating, cardProgress)
+        const progress = await fetchCardProgress(userId, currentItem.card.id)
+        await persistReview(userId, currentItem.card.id, correct ? 'Good' : 'Again', progress)
       } catch (err) {
         console.error('Failed to persist review:', err)
         toast.error('Could not save review — check your connection.')
       }
 
       setStats((prev) => ({
+        ...prev,
         totalReviewed: prev.totalReviewed + 1,
-        totalCorrect: prev.totalCorrect + 1,
-        newLearned: prev.newLearned,
+        totalCorrect: prev.totalCorrect + (correct ? 1 : 0),
       }))
       incrementReviewed()
 
-      advanceToNext()
+      setPendingWrong(!correct)
+      setShowNextButton(true)
     },
-    [currentItem, ratingDisabled, userId, incrementReviewed, advanceToNext],
+    [currentItem, userId, incrementReviewed],
   )
+
+  // -------------------------------------------------------------------------
+  // Handle the "Next" tap: requeue a wrong drill to the end of the plan, or
+  // simply advance for a correct one.
+  // -------------------------------------------------------------------------
+  const handleDrillNext = useCallback(() => {
+    if (nextDisabled) return
+    setNextDisabled(true)
+
+    if (pendingWrong) {
+      setPlan((prev) => {
+        const updated = [...prev]
+        const item = updated[currentIndex]
+        updated.splice(currentIndex, 1)
+        updated.push(item)
+        return updated
+      })
+      setTotalItems((n) => n + 1)
+      setPendingWrong(false)
+      setDirection(1)
+      setRevealed(false)
+      setShowNextButton(false)
+      setNextDisabled(false)
+    } else {
+      advanceToNext()
+    }
+  }, [nextDisabled, pendingWrong, currentIndex, advanceToNext])
 
   // -------------------------------------------------------------------------
   // Summary
@@ -292,18 +282,18 @@ function TeachingSessionView({ teachingPlan, userId }: TeachingSessionProps) {
           </motion.div>
         </AnimatePresence>
 
-        {/* Rating buttons (drill correct path) */}
+        {/* Next button (drill answer acknowledgement — no rating in Learn mode) */}
         <AnimatePresence>
-          {showRatingButtons && currentItem.kind === 'drill' && (
+          {showNextButton && currentItem.kind === 'drill' && (
             <motion.div
-              key="rating-buttons"
+              key="next-button"
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 12 }}
               transition={{ duration: 0.18 }}
               className="w-full"
             >
-              <RatingButtons onRate={handleDrillRate} disabled={ratingDisabled} />
+              <NextButton onClick={handleDrillNext} disabled={nextDisabled} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -322,6 +312,8 @@ function ReviewSessionView({ initialQueue, userId, newCardIds }: ReviewSessionPr
   const [revealed, setRevealed] = useState(false)
   const [showRatingButtons, setShowRatingButtons] = useState(false)
   const [ratingDisabled, setRatingDisabled] = useState(false)
+  const [showNextButton, setShowNextButton] = useState(false)
+  const [nextDisabled, setNextDisabled] = useState(false)
   const [direction, setDirection] = useState<1 | -1>(1)
   const [stats, setStats] = useState<SessionStats>({
     totalReviewed: 0,
@@ -355,24 +347,37 @@ function ReviewSessionView({ initialQueue, userId, newCardIds }: ReviewSessionPr
         }))
         incrementReviewed()
 
-        setQueue((prev) => {
-          const newQueue = [...prev]
-          const card = newQueue[currentIndex]
-          newQueue.splice(currentIndex, 1)
-          newQueue.push(card)
-          return newQueue
-        })
-        setTotalCards((n) => n + 1)
-
-        setDirection(1)
-        setRevealed(false)
-        setShowRatingButtons(false)
+        // Persisted immediately, but the requeue/advance waits for an
+        // explicit "Next" tap so the feedback colors stay visible.
+        setShowNextButton(true)
       } else {
         setShowRatingButtons(true)
       }
     },
-    [currentCard, currentIndex, userId, incrementReviewed],
+    [currentCard, userId, incrementReviewed],
   )
+
+  // -------------------------------------------------------------------------
+  // Handle the "Next" tap on a wrong answer: requeue toward the end.
+  // -------------------------------------------------------------------------
+  const handleWrongNext = useCallback(() => {
+    if (nextDisabled) return
+    setNextDisabled(true)
+
+    setQueue((prev) => {
+      const newQueue = [...prev]
+      const card = newQueue[currentIndex]
+      newQueue.splice(currentIndex, 1)
+      newQueue.push(card)
+      return newQueue
+    })
+    setTotalCards((n) => n + 1)
+
+    setDirection(1)
+    setRevealed(false)
+    setShowNextButton(false)
+    setNextDisabled(false)
+  }, [nextDisabled, currentIndex])
 
   const handleRate = useCallback(
     async (rating: UIRating) => {
@@ -473,6 +478,18 @@ function ReviewSessionView({ initialQueue, userId, newCardIds }: ReviewSessionPr
               className="w-full"
             >
               <RatingButtons onRate={handleRate} disabled={ratingDisabled} />
+            </motion.div>
+          )}
+          {showNextButton && (
+            <motion.div
+              key="next-button"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 12 }}
+              transition={{ duration: 0.18 }}
+              className="w-full"
+            >
+              <NextButton onClick={handleWrongNext} disabled={nextDisabled} />
             </motion.div>
           )}
         </AnimatePresence>

@@ -2,6 +2,11 @@
  * AnswerFeedback — wraps any content and plays a green flash (correct)
  * or a red flash + horizontal shake (wrong) via Framer Motion.
  *
+ * The flash holds on its final color instead of fading back to white —
+ * callers are expected to keep `feedback` set until they unmount/replace
+ * this instance (e.g. on advancing to the next card), so the marking stays
+ * visible until the user explicitly moves on.
+ *
  * The wrapper is purely presentational: it responds to `feedback` prop
  * and fires `onAnimationComplete` when the animation ends.
  */
@@ -35,11 +40,11 @@ export function AnswerFeedback({
       onClick={onClick}
       animate={
         isCorrect
-          ? { backgroundColor: ['#ffffff', '#dcfce7', '#ffffff'] }
+          ? { backgroundColor: ['#ffffff', '#dcfce7'] }
           : isWrong
             ? {
                 x: [0, -8, 8, -8, 8, 0],
-                backgroundColor: ['#ffffff', '#fee2e2', '#ffffff'],
+                backgroundColor: ['#ffffff', '#fee2e2'],
               }
             : {}
       }

@@ -13,6 +13,7 @@ import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { CardTypeB } from '@/features/cards'
+import { NextButton } from './NextButton'
 import type { Card } from '@/types'
 
 interface InfiniteReviewSessionViewProps {
@@ -38,6 +39,9 @@ export function InfiniteReviewSessionView({ cards }: InfiniteReviewSessionViewPr
   const [revealed, setRevealed] = useState(false)
   const [direction, setDirection] = useState<1 | -1>(1)
   const [reviewedCount, setReviewedCount] = useState(0)
+  const [showNextButton, setShowNextButton] = useState(false)
+  const [nextDisabled, setNextDisabled] = useState(false)
+  const [pendingWrong, setPendingWrong] = useState(false)
 
   const currentCard = queue[currentIndex]
 
@@ -45,6 +49,8 @@ export function InfiniteReviewSessionView({ cards }: InfiniteReviewSessionViewPr
     setReviewedCount((n) => n + 1)
     setDirection(1)
     setRevealed(false)
+    setShowNextButton(false)
+    setNextDisabled(false)
 
     setCurrentIndex((index) => {
       const next = index + 1
@@ -60,21 +66,37 @@ export function InfiniteReviewSessionView({ cards }: InfiniteReviewSessionViewPr
   const handleAnswer = useCallback(
     (correct: boolean) => {
       if (!currentCard) return
-
-      if (!correct) {
-        // Requeue the missed card toward the end so it comes back this loop.
-        setQueue((prev) => {
-          const newQueue = [...prev]
-          const [card] = newQueue.splice(currentIndex, 1)
-          newQueue.push(card)
-          return newQueue
-        })
-      }
-
-      advance()
+      // Feedback stays on screen until the user taps "Next".
+      setPendingWrong(!correct)
+      setShowNextButton(true)
     },
-    [currentCard, currentIndex, advance],
+    [currentCard],
   )
+
+  const handleNext = useCallback(() => {
+    if (nextDisabled) return
+    setNextDisabled(true)
+
+    if (pendingWrong) {
+      // Requeue the missed card toward the end so it comes back this loop.
+      // currentIndex stays put — the array already shifted underneath it,
+      // so the next card is naturally whatever slid into this slot.
+      setQueue((prev) => {
+        const newQueue = [...prev]
+        const [card] = newQueue.splice(currentIndex, 1)
+        newQueue.push(card)
+        return newQueue
+      })
+      setReviewedCount((n) => n + 1)
+      setPendingWrong(false)
+      setDirection(1)
+      setRevealed(false)
+      setShowNextButton(false)
+      setNextDisabled(false)
+    } else {
+      advance()
+    }
+  }, [nextDisabled, pendingWrong, currentIndex, advance])
 
   if (!currentCard) return null
 
@@ -117,6 +139,21 @@ export function InfiniteReviewSessionView({ cards }: InfiniteReviewSessionViewPr
               mnemonicHidden={true}
             />
           </motion.div>
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {showNextButton && (
+            <motion.div
+              key="next-button"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 12 }}
+              transition={{ duration: 0.18 }}
+              className="w-full"
+            >
+              <NextButton onClick={handleNext} disabled={nextDisabled} />
+            </motion.div>
+          )}
         </AnimatePresence>
       </div>
     </div>

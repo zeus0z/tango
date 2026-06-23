@@ -13,9 +13,11 @@
  *
  * Interaction model (instant-answer):
  *  - Tapping a cell IS the answer — no confirm step.
- *  - Correct tap → cell flashes green, then onAnswer(true) fires.
+ *  - Correct tap → cell flashes green, then onAnswer(true) fires after ~600ms.
  *  - Wrong tap → tapped cell flashes red, correct cell flashes green
  *    simultaneously, then onAnswer(false) fires after ~600ms.
+ *  - Colors stay on screen (don't revert) — the session view controls when
+ *    this card unmounts, after an explicit "Next" tap.
  */
 
 import { useState, useCallback } from 'react'
@@ -113,10 +115,9 @@ export function RomajiGrid({ correctRomaji, onAnswer }: RomajiGridProps) {
         setFlashes({ [romaji]: 'wrong', [correctRomaji]: 'correct' })
       }
 
-      // Fire onAnswer after the flash animation (~600ms)
+      // Fire onAnswer after the flash animation (~600ms); colors stay put —
+      // the session view controls when this card unmounts (after "Next").
       setTimeout(() => {
-        setFlashes({})
-        setAnswered(false)
         onAnswer(correct)
       }, 600)
     },

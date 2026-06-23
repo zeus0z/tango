@@ -8,7 +8,7 @@
  * PRESENTATIONAL: receives a Card + callbacks, no data fetching, no FSRS.
  */
 
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Volume2 } from 'lucide-react'
 import type { Card } from '@/types'
@@ -102,8 +102,12 @@ export function CardTypeB({ card, onAnswer, revealed = false, onReveal, mnemonic
   const [mnemonicOpen, setMnemonicOpen] = useState(false)
 
   // Build the 6-option set: correct + 5 distractors, shuffled.
-  // Memoised per card so it doesn't re-shuffle on every render.
-  const options = useMemo(() => {
+  // `useState` lazy initializer (not `useMemo`) — Math.random() is impure and
+  // can't run during a render the Compiler might re-execute, but a lazy
+  // initializer is guaranteed to run exactly once per mount. Every caller
+  // keys this component per-card, so a fresh mount = a fresh card shown,
+  // which is exactly when we want a fresh shuffle.
+  const [options] = useState(() => {
     // Find the matching HiraganaChar for the target
     const target = HIRAGANA.find((h) => h.character === card.character)
     if (!target) {
@@ -114,17 +118,16 @@ export function CardTypeB({ card, onAnswer, revealed = false, onReveal, mnemonic
     const distractors = getDistractors(target, 5)
     const all = [card.character, ...distractors.map((d) => d.character)]
 
-    // Simple deterministic shuffle based on card.id
-    const seed = card.id
-    let s = seed.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0)
+    // Fisher–Yates shuffle, freshly randomized on every mount — so the same
+    // card doesn't always lay out identically (which would let users memorize
+    // tile position instead of recognizing the character).
     const shuffled = all.slice()
     for (let i = shuffled.length - 1; i > 0; i--) {
-      s = (s * 1664525 + 1013904223) & 0xffffffff
-      const j = Math.floor(((s >>> 0) / 0x100000000) * (i + 1))
+      const j = Math.floor(Math.random() * (i + 1))
       ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
     }
     return shuffled
-  }, [card])
+  })
 
   function handleTap(character: string) {
     if (answered) return
@@ -136,10 +139,9 @@ export function CardTypeB({ card, onAnswer, revealed = false, onReveal, mnemonic
 
   function handleAnimationComplete(character: string) {
     if (feedback[character] && feedback[character] !== 'idle') {
-      const wasCorrect = feedback[character] === 'correct'
-      setFeedback({})
-      setAnswered(false)
-      onAnswer(wasCorrect)
+      // Feedback colors intentionally stay — the session view controls
+      // when this card unmounts (after an explicit "Next" tap).
+      onAnswer(feedback[character] === 'correct')
     }
   }
 

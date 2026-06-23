@@ -56,9 +56,9 @@ export function CardTypeA({ card, onAnswer, revealed = false, onReveal, mnemonic
 
   function handleAnimationComplete() {
     if (feedback !== 'idle') {
-      const wasCorrect = feedback === 'correct'
-      setFeedback('idle')
-      onAnswer(wasCorrect)
+      // Feedback color intentionally stays — the session view controls
+      // when this card unmounts (after an explicit "Next" tap).
+      onAnswer(feedback === 'correct')
     }
   }
 

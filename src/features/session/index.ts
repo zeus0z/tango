@@ -9,6 +9,7 @@ export { InfiniteReviewSessionView } from './components/InfiniteReviewSessionVie
 export { SessionSummary } from './components/SessionSummary'
 export { SessionProgress } from './components/SessionProgress'
 export { RatingButtons } from './components/RatingButtons'
+export { NextButton } from './components/NextButton'
 export { IntroduceCharacter } from './components/IntroduceCharacter'
 export {
   useSessionQueueQuery,

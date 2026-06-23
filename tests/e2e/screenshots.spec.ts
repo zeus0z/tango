@@ -113,3 +113,74 @@ test.describe('@screenshot learn-mnemonic', () => {
     })
   })
 })
+
+/**
+ * Drill answer feedback (PER-31 — Learn mode rating removal + persistent
+ * feedback). Learn mode never shows Hard/Good/Easy; a wrong drill answer
+ * holds its red/green marking and shows a "Next →" button instead of
+ * auto-advancing. Captures the Type A (symbol → sound) wrong-answer state.
+ */
+test.describe('@screenshot learn-drill-feedback', () => {
+  test.use({ mockTables: { cards: LEARN_CARDS, user_card_progress: [], review_logs: [] } })
+
+  test('capture learn drill wrong-answer feedback + Next button', async ({ authedPage }, testInfo) => {
+    await authedPage.goto('/home')
+    await authedPage.waitForLoadState('networkidle')
+    await authedPage.getByRole('button', { name: /^Learn/ }).click()
+    await authedPage.waitForLoadState('networkidle')
+
+    // Intro screen for あ → drill (Type A: symbol → sound)
+    await authedPage.getByRole('button', { name: /Got it/ }).click()
+    await authedPage.locator('p.font-ja.text-8xl').click() // reveal romaji grid
+    await authedPage.getByRole('button', { name: 'ka', exact: true }).click() // wrong (correct is 'a')
+
+    await authedPage.getByRole('button', { name: /Next/ }).waitFor()
+    await authedPage.screenshot({
+      path: `screenshots/learn-drill-feedback-${testInfo.project.name}.png`,
+      fullPage: true,
+    })
+  })
+})
+
+/**
+ * Review mode wrong-answer feedback (PER-31). Correct answers still show
+ * Hard/Good/Easy (unchanged); wrong answers now hold their feedback and show
+ * "Next →" instead of auto-advancing.
+ */
+const REVIEW_FEEDBACK_CARDS = [
+  { id: 'c1', character: 'あ', romaji: 'a', type: 'hiragana', group_name: 'vowel', genki_order: 1 },
+]
+const REVIEW_FEEDBACK_PROGRESS = [
+  {
+    id: 'p1', card_id: 'c1', state: 'Review', stability: 10, due: '2026-06-10T00:00:00Z',
+    reps: 5, lapses: 0, last_review: '2026-06-04T00:00:00Z',
+    cards: { character: 'あ', romaji: 'a', group_name: 'vowel', genki_order: 1 },
+  },
+]
+
+test.describe('@screenshot review-drill-feedback', () => {
+  test.use({ mockTables: { cards: REVIEW_FEEDBACK_CARDS, user_card_progress: REVIEW_FEEDBACK_PROGRESS } })
+
+  test('capture review wrong-answer feedback + Next button', async ({ authedPage }, testInfo) => {
+    await authedPage.goto('/home')
+    await authedPage.waitForLoadState('networkidle')
+    await authedPage.getByRole('button', { name: /Review All/ }).click()
+    await authedPage.waitForLoadState('networkidle')
+
+    await authedPage.locator('p.text-4xl.font-bold').first().click() // reveal 6 tiles
+    const tiles = authedPage.locator('button:has(span[lang="ja"])')
+    const count = await tiles.count()
+    for (let i = 0; i < count; i++) {
+      if ((await tiles.nth(i).innerText()) !== 'あ') {
+        await tiles.nth(i).click() // wrong
+        break
+      }
+    }
+
+    await authedPage.getByRole('button', { name: /Next/ }).waitFor()
+    await authedPage.screenshot({
+      path: `screenshots/review-drill-feedback-${testInfo.project.name}.png`,
+      fullPage: true,
+    })
+  })
+})
