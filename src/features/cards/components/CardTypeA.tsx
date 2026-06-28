@@ -40,13 +40,15 @@ interface CardTypeAProps {
    * When false: mnemonic is shown by default with no button (used on the introduction screen).
    */
   mnemonicHidden?: boolean
+  /** When true, shows "Qual som ele faz?" prompt above the romaji grid (Learn mode). */
+  showPrompt?: boolean
 }
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
-export function CardTypeA({ card, onAnswer, revealed = false, onReveal, mnemonicHidden = true }: CardTypeAProps) {
+export function CardTypeA({ card, onAnswer, revealed = false, onReveal, mnemonicHidden = true, showPrompt = false }: CardTypeAProps) {
   const [feedback, setFeedback] = useState<FeedbackState>('idle')
   const [mnemonicOpen, setMnemonicOpen] = useState(false)
 
@@ -112,8 +114,13 @@ export function CardTypeA({ card, onAnswer, revealed = false, onReveal, mnemonic
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2 }}
-          className="w-full"
+          className="w-full flex flex-col gap-2"
         >
+          {showPrompt && (
+            <p className="text-center text-sm text-muted-foreground">
+              Qual som ele faz?
+            </p>
+          )}
           <RomajiGrid
             correctRomaji={card.romaji}
             onAnswer={handleAnswer}
@@ -134,6 +141,7 @@ export function CardTypeA({ card, onAnswer, revealed = false, onReveal, mnemonic
               <Button
                 variant="ghost"
                 size="sm"
+                className="text-primary hover:text-primary/80 hover:bg-primary/10"
                 onClick={() => setMnemonicOpen((prev) => !prev)}
               >
                 💡 Show mnemonic
@@ -141,6 +149,7 @@ export function CardTypeA({ card, onAnswer, revealed = false, onReveal, mnemonic
               {mnemonicOpen && (
                 <MnemonicViewer
                   mnemonics={card.mnemonics_pt}
+                  romaji={card.romaji}
                   textClassName="text-muted-foreground px-1"
                 />
               )}
@@ -148,6 +157,7 @@ export function CardTypeA({ card, onAnswer, revealed = false, onReveal, mnemonic
           ) : (
             <MnemonicViewer
               mnemonics={card.mnemonics_pt}
+              romaji={card.romaji}
               textClassName="text-muted-foreground px-1"
             />
           )}

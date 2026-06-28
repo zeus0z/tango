@@ -18,13 +18,27 @@ import { cn } from '@/lib/utils'
 interface MnemonicViewerProps {
   /** The memory hooks for this card; the first entry is the primary/default. */
   mnemonics: string[]
+  /** Romaji sound for this card — the first occurrence in the mnemonic text is highlighted. */
+  romaji?: string
   /** Extra classes for the mnemonic text element. */
   textClassName?: string
   /** Extra classes for the wrapper. */
   className?: string
 }
 
-export function MnemonicViewer({ mnemonics, textClassName, className }: MnemonicViewerProps) {
+function highlightRomaji(text: string, romaji: string) {
+  const idx = text.toLowerCase().indexOf(romaji.toLowerCase())
+  if (idx === -1) return <>{text}</>
+  return (
+    <>
+      {text.slice(0, idx)}
+      <span className="text-primary font-semibold not-italic">{text.slice(idx, idx + romaji.length)}</span>
+      {text.slice(idx + romaji.length)}
+    </>
+  )
+}
+
+export function MnemonicViewer({ mnemonics, romaji, textClassName, className }: MnemonicViewerProps) {
   const count = mnemonics.length
   const [index, setIndex] = useState(0)
   const [seen, setSeen] = useState(mnemonics)
@@ -52,7 +66,7 @@ export function MnemonicViewer({ mnemonics, textClassName, className }: Mnemonic
           transition={{ duration: 0.15 }}
           className={cn('text-sm italic', textClassName)}
         >
-          {mnemonics[current]}
+          {romaji ? highlightRomaji(mnemonics[current], romaji) : mnemonics[current]}
         </motion.p>
       </AnimatePresence>
 

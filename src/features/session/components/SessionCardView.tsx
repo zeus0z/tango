@@ -13,6 +13,7 @@
  */
 
 import { useState, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { CardTypeA, CardTypeB } from '@/features/cards'
@@ -79,9 +80,9 @@ export function SessionCardView(props: SessionCardViewProps) {
 // ===========================================================================
 
 function TeachingSessionView({ teachingPlan, userId }: TeachingSessionProps) {
+  const navigate = useNavigate()
   const [plan, setPlan] = useState<TeachingItem[]>(teachingPlan)
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [revealed, setRevealed] = useState(false)
   const [showNextButton, setShowNextButton] = useState(false)
   const [nextDisabled, setNextDisabled] = useState(false)
   const [pendingWrong, setPendingWrong] = useState(false)
@@ -114,7 +115,6 @@ function TeachingSessionView({ teachingPlan, userId }: TeachingSessionProps) {
       setDone(true)
     } else {
       setCurrentIndex(nextIndex)
-      setRevealed(false)
       setShowNextButton(false)
       setNextDisabled(false)
     }
@@ -207,7 +207,6 @@ function TeachingSessionView({ teachingPlan, userId }: TeachingSessionProps) {
       setTotalItems((n) => n + 1)
       setPendingWrong(false)
       setDirection(1)
-      setRevealed(false)
       setShowNextButton(false)
       setNextDisabled(false)
     } else {
@@ -235,7 +234,7 @@ function TeachingSessionView({ teachingPlan, userId }: TeachingSessionProps) {
   // -------------------------------------------------------------------------
   return (
     <div className="flex flex-col w-full min-h-svh">
-      <SessionProgress current={progress} total={totalItems} />
+      <SessionProgress current={progress} total={totalItems} onExit={() => navigate('/home')} />
 
       <div className="flex flex-col flex-1 items-center justify-start px-4 pt-6 pb-safe-or-6 gap-4">
         <AnimatePresence mode="wait" initial={false}>
@@ -264,9 +263,9 @@ function TeachingSessionView({ teachingPlan, userId }: TeachingSessionProps) {
               <CardTypeA
                 card={currentItem.card}
                 onAnswer={handleDrillAnswer}
-                revealed={revealed}
-                onReveal={() => setRevealed(true)}
+                revealed={true}
                 mnemonicHidden={true}
+                showPrompt={true}
               />
             )}
 
@@ -274,8 +273,7 @@ function TeachingSessionView({ teachingPlan, userId }: TeachingSessionProps) {
               <CardTypeB
                 card={currentItem.card}
                 onAnswer={handleDrillAnswer}
-                revealed={revealed}
-                onReveal={() => setRevealed(true)}
+                revealed={true}
                 mnemonicHidden={true}
               />
             )}
@@ -307,6 +305,7 @@ function TeachingSessionView({ teachingPlan, userId }: TeachingSessionProps) {
 // ===========================================================================
 
 function ReviewSessionView({ initialQueue, userId, newCardIds }: ReviewSessionProps) {
+  const navigate = useNavigate()
   const [queue, setQueue] = useState<Card[]>(initialQueue)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [revealed, setRevealed] = useState(false)
@@ -439,7 +438,7 @@ function ReviewSessionView({ initialQueue, userId, newCardIds }: ReviewSessionPr
 
   return (
     <div className="flex flex-col w-full min-h-svh">
-      <SessionProgress current={progress} total={totalCards} />
+      <SessionProgress current={progress} total={totalCards} onExit={() => navigate('/home')} />
 
       <div className="flex flex-col flex-1 items-center justify-start px-4 pt-6 pb-safe-or-6 gap-4">
         <AnimatePresence mode="wait" initial={false}>
