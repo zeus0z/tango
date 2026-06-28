@@ -22,6 +22,14 @@ import { DailyGoalTracker } from '@/features/home/components/DailyGoalTracker'
 import { MilestoneBanner } from '@/features/home/components/MilestoneBanner'
 import { SessionModeSelector } from '@/features/home/components/SessionModeSelector'
 import { AlphabetProgressMap } from '@/components/AlphabetProgressMap'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import Layout from '@/components/Layout'
 import PageTransition from '@/components/PageTransition'
 
@@ -30,7 +38,7 @@ import PageTransition from '@/components/PageTransition'
 // ---------------------------------------------------------------------------
 
 export default function HomePage() {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   const userId = user?.id
 
   const { data: learnedToday, isLoading: loadingCount } = useTodayLearnedCount(userId)
@@ -55,13 +63,26 @@ export default function HomePage() {
               </p>
             </div>
 
-            {/* Avatar initial */}
-            <div
-              aria-hidden="true"
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground"
-            >
-              {initial}
-            </div>
+            {/* Avatar — tapping opens the account menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground active:opacity-80"
+                  aria-label="Account menu"
+                >
+                  {initial}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuLabel className="text-xs font-normal text-muted-foreground truncate">
+                  {user?.email}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={logout}>
+                  Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </header>
 
           {/* ── Milestone banner (conditional) ─────────────────────────── */}
