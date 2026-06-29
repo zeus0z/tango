@@ -4,20 +4,72 @@ import {
   RouterProvider,
   Navigate,
   Outlet,
+  useRouteError,
+  isRouteErrorResponse,
 } from 'react-router-dom'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 // ---------------------------------------------------------------------------
-// Lazy page imports — each page must be a default export
+// Lazy page imports — each page must be a default export.
+// lazyWithRetry catches chunk-not-found errors (stale deployment) and reloads.
 // ---------------------------------------------------------------------------
 
-const LandingPage = lazy(() => import('@/pages/LandingPage'))
-const LoginPage = lazy(() => import('@/pages/LoginPage'))
-const HomePage = lazy(() => import('@/pages/HomePage'))
-const SessionPage = lazy(() => import('@/pages/SessionPage'))
-const InfiniteReviewPage = lazy(() => import('@/pages/InfiniteReviewPage'))
-const ProgressPage = lazy(() => import('@/pages/ProgressPage'))
+type LazyFactory<T> = () => Promise<{ default: T }>
+
+function lazyWithRetry<T extends React.ComponentType<unknown>>(factory: LazyFactory<T>) {
+  return lazy(() =>
+    factory().catch(() => {
+      // Chunk hash mismatch after a new deploy — hard reload gets fresh index.html.
+      window.location.reload()
+      return new Promise<never>(() => {})
+    }),
+  )
+}
+
+const LandingPage = lazyWithRetry(() => import('@/pages/LandingPage'))
+const LoginPage = lazyWithRetry(() => import('@/pages/LoginPage'))
+const HomePage = lazyWithRetry(() => import('@/pages/HomePage'))
+const SessionPage = lazyWithRetry(() => import('@/pages/SessionPage'))
+const InfiniteReviewPage = lazyWithRetry(() => import('@/pages/InfiniteReviewPage'))
+const ProgressPage = lazyWithRetry(() => import('@/pages/ProgressPage'))
+
+// ---------------------------------------------------------------------------
+// Route-level error element — shown when React Router catches an error
+// (loader/action failures, lazy import errors that slip past lazyWithRetry, etc.)
+// ---------------------------------------------------------------------------
+
+function RouteErrorPage() {
+  const error = useRouteError()
+  const isChunkError =
+    error instanceof TypeError && error.message.includes('dynamically imported module')
+
+  const title = isRouteErrorResponse(error)
+    ? `${error.status} ${error.statusText}`
+    : 'Something went wrong'
+
+  const description = isChunkError
+    ? 'The app was updated. Reload to get the latest version.'
+    : 'An unexpected error occurred. Try refreshing the page.'
+
+  return (
+    <div className="flex min-h-svh items-center justify-center p-4">
+      <Card className="w-full max-w-sm text-center">
+        <CardHeader>
+          <CardTitle className="text-lg">{title}</CardTitle>
+          <CardDescription>{description}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button className="w-full" onClick={() => window.location.reload()}>
+            Reload
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
 
 // ---------------------------------------------------------------------------
 // Loading fallback
@@ -94,6 +146,7 @@ const router = createBrowserRouter([
         <LandingPage />
       </Suspense>
     ),
+    errorElement: <RouteErrorPage />,
   },
   {
     path: '/login',
@@ -102,11 +155,13 @@ const router = createBrowserRouter([
         <LoginPage />
       </Suspense>
     ),
+    errorElement: <RouteErrorPage />,
   },
 
   // ── Protected routes ───────────────────────────────────────────────────────
   {
     element: <ProtectedRoute />,
+    errorElement: <RouteErrorPage />,
     children: [
       {
         path: '/home',
