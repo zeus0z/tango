@@ -4,6 +4,10 @@
 
 @layer base {
   :root {
+    /* ── Japanese font — overridden by inline script in index.html and by the
+          font picker in the avatar dropdown (see src/lib/fonts.ts) ── */
+    --font-ja: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+
     /* ── Brand / action tokens ── */
     /* primary: indigo-ish blue — CTAs, active states, progress fills */
     --primary: 230 70% 50%;
@@ -129,9 +133,11 @@
     padding-right: env(safe-area-inset-right);
   }
 
-  /* Japanese content always gets lang="ja" + CJK font stack (via Tailwind font-ja) */
+  /* Japanese content always gets lang="ja" + the user-selected font (via --font-ja).
+     The default is Noto Sans JP (set above). The font picker in the avatar dropdown
+     swaps --font-ja on document.documentElement via src/lib/fonts.ts#applyFont(). */
   [lang='ja'] {
-    font-family: 'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif;
+    font-family: var(--font-ja);
   }
 
   #root {
