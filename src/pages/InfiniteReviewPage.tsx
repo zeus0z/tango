@@ -49,7 +49,7 @@ export default function InfiniteReviewPage() {
         <button
           type="button"
           onClick={() => navigate('/home')}
-          className="min-h-[44px] self-start -ml-1 px-2 rounded-lg text-sm font-medium text-muted-foreground active:bg-muted/60 transition-colors"
+          className="min-h-[44px] self-start -ml-1 px-2 rounded-lg text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground active:bg-muted/60 cursor-pointer"
         >
           ← Home
         </button>
@@ -95,7 +95,7 @@ export default function InfiniteReviewPage() {
                       ? 'cursor-not-allowed border-border bg-muted/40 text-muted-foreground opacity-60'
                       : isSelected
                         ? 'border-primary bg-primary/10 text-foreground ring-2 ring-primary'
-                        : 'border-border bg-card text-foreground active:bg-muted/60',
+                        : 'border-border bg-card text-foreground hover:bg-muted/40 hover:border-primary/50 active:bg-muted/60 cursor-pointer',
                   )}
                 >
                   <span className="text-2xl" lang="ja" aria-hidden="true">
@@ -127,7 +127,7 @@ export default function InfiniteReviewPage() {
               'w-full min-h-[56px] rounded-2xl font-bold text-base shadow-sm',
               'transition-transform duration-75',
               selected
-                ? 'bg-primary text-primary-foreground active:scale-95'
+                ? 'bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95 cursor-pointer'
                 : 'cursor-not-allowed bg-muted text-muted-foreground',
             )}
           >

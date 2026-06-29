@@ -107,7 +107,7 @@ export function InfiniteReviewSessionView({ cards }: InfiniteReviewSessionViewPr
         <button
           type="button"
           onClick={() => navigate('/home')}
-          className="min-h-[44px] px-3 -ml-1 rounded-lg text-sm font-medium text-muted-foreground active:bg-muted/60 transition-colors"
+          className="min-h-[44px] px-3 -ml-1 rounded-lg text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground active:bg-muted/60 cursor-pointer"
         >
           ✕ Exit
         </button>
