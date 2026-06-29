@@ -91,25 +91,32 @@ function PageLoader() {
  * Guards all routes that require an authenticated Supabase session.
  *
  * Auth resolution strategy:
- * 1. On mount: call `supabase.auth.getSession()` to check the existing session.
- * 2. Subscribe to `onAuthStateChange` for live updates.
- * 3. Show a loading indicator while the initial resolution is in flight.
- * 4. If unauthenticated → redirect to `/`.
+ * - Drive auth state from a single `onAuthStateChange` subscription only.
+ * - Initialise session as `undefined` (loading) and update on the first event
+ *   (`INITIAL_SESSION`, `SIGNED_IN`, or `SIGNED_OUT`).
+ * - Show a loading indicator until the first event fires.
+ * - If unauthenticated → redirect to `/`.
  *
- * Seam for A1: A1 can additionally call `setAuthSession` in `src/lib/store.ts`
- * inside the same `onAuthStateChange` listener to keep the Zustand store in sync
- * without restructuring this component.
+ * Why NOT `getSession()` first:
+ * After Google OAuth, Supabase returns tokens in the URL hash at the redirect
+ * target (`/home`). The client must asynchronously extract and exchange those
+ * tokens before a session exists. Calling `getSession()` immediately on mount
+ * races against this hash processing and returns `null`, triggering a redirect
+ * to `/` before `onAuthStateChange` fires `SIGNED_IN`. Using only
+ * `onAuthStateChange` lets the Supabase client always be the source of truth —
+ * it fires `INITIAL_SESSION` for existing sessions and `SIGNED_IN` after OAuth.
+ *
+ * Seam for A1: A1 calls `setAuthSession` in `src/lib/store.ts` inside a
+ * separate `onAuthStateChange` listener (via AppAuthProvider) to keep the
+ * Zustand store in sync without restructuring this component.
  */
 function ProtectedRoute() {
   const [session, setSession] = useState<Session | null | undefined>(undefined)
 
   useEffect(() => {
-    // Resolve the existing session once on mount.
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session)
-    })
-
-    // Keep in sync with auth state changes (login / logout / token refresh).
+    // Drive auth state from onAuthStateChange only — avoids the getSession()
+    // race condition on OAuth redirect (see JSDoc above).
+    // Fires INITIAL_SESSION (existing/null session) or SIGNED_IN (after OAuth).
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s)
     })
