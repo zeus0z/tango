@@ -6,11 +6,28 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+.serena
 
 node_modules
 dist
 dist-ssr
 *.local
+
+# Env files
+.env
+
+# Supabase CLI
+supabase/.temp
+supabase/.branches
+
+# Playwright
+/test-results
+/playwright-report
+/playwright/.cache
+/screenshots
+
+# Vitest
+/coverage
 
 
 CLAUDE.md
