@@ -1,6 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { reportError } from '@/lib/errorReporter'
 
 interface ErrorBoundaryProps {
   children: ReactNode
@@ -27,10 +28,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    // In production replace this with a real error reporter (e.g. Sentry).
-    if (import.meta.env.DEV) {
-      console.error('[ErrorBoundary]', error, info.componentStack)
-    }
+    reportError(error, { componentStack: info.componentStack ?? undefined })
   }
 
   private handleReset = () => {
