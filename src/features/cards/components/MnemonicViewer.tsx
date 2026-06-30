@@ -5,7 +5,7 @@
  * current one and, when there's more than one, a small prev/next control with a
  * "1 / 2" indicator. Styling of the surrounding block + the text is left to the
  * caller via `className` / `textClassName`, so it fits both the in-card affordance
- * and the intro-screen "Memory hook" block.
+ * and the intro-screen "Como lembrar:" block.
  *
  * PRESENTATIONAL: no data fetching.
  */
@@ -18,27 +18,31 @@ import { cn } from '@/lib/utils'
 interface MnemonicViewerProps {
   /** The memory hooks for this card; the first entry is the primary/default. */
   mnemonics: string[]
-  /** Romaji sound for this card — the first occurrence in the mnemonic text is highlighted. */
-  romaji?: string
+  /**
+   * Per-mnemonic highlight keywords, parallel array to `mnemonics`.
+   * keywords[i] is the exact word/substring to highlight in mnemonics[i].
+   * An empty string or missing entry means no highlight for that mnemonic.
+   */
+  keywords?: string[]
   /** Extra classes for the mnemonic text element. */
   textClassName?: string
   /** Extra classes for the wrapper. */
   className?: string
 }
 
-function highlightRomaji(text: string, romaji: string) {
-  const idx = text.toLowerCase().indexOf(romaji.toLowerCase())
+function highlightKeyword(text: string, keyword: string) {
+  const idx = text.toLowerCase().indexOf(keyword.toLowerCase())
   if (idx === -1) return <>{text}</>
   return (
     <>
       {text.slice(0, idx)}
-      <span className="text-primary font-semibold not-italic">{text.slice(idx, idx + romaji.length)}</span>
-      {text.slice(idx + romaji.length)}
+      <span className="text-primary font-semibold not-italic">{text.slice(idx, idx + keyword.length)}</span>
+      {text.slice(idx + keyword.length)}
     </>
   )
 }
 
-export function MnemonicViewer({ mnemonics, romaji, textClassName, className }: MnemonicViewerProps) {
+export function MnemonicViewer({ mnemonics, keywords, textClassName, className }: MnemonicViewerProps) {
   const count = mnemonics.length
   const [index, setIndex] = useState(0)
   const [seen, setSeen] = useState(mnemonics)
@@ -55,6 +59,9 @@ export function MnemonicViewer({ mnemonics, romaji, textClassName, className }: 
   const current = Math.min(index, count - 1)
   const go = (delta: number) => setIndex((i) => (Math.min(i, count - 1) + delta + count) % count)
 
+  const currentKeyword = keywords?.[current]
+  const hasKeyword = !!currentKeyword && currentKeyword.length > 0
+
   return (
     <div className={cn('w-full flex flex-col gap-2', className)}>
       <AnimatePresence mode="wait">
@@ -66,7 +73,7 @@ export function MnemonicViewer({ mnemonics, romaji, textClassName, className }: 
           transition={{ duration: 0.15 }}
           className={cn('text-sm italic', textClassName)}
         >
-          {romaji ? highlightRomaji(mnemonics[current], romaji) : mnemonics[current]}
+          {hasKeyword ? highlightKeyword(mnemonics[current], currentKeyword) : mnemonics[current]}
         </motion.p>
       </AnimatePresence>
 

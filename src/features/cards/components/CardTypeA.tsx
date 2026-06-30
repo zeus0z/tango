@@ -149,7 +149,7 @@ export function CardTypeA({ card, onAnswer, revealed = false, onReveal, mnemonic
               {mnemonicOpen && (
                 <MnemonicViewer
                   mnemonics={card.mnemonics_pt}
-                  romaji={card.romaji}
+                  keywords={card.mnemonic_keyword ?? undefined}
                   textClassName="text-muted-foreground px-1"
                 />
               )}
@@ -157,7 +157,7 @@ export function CardTypeA({ card, onAnswer, revealed = false, onReveal, mnemonic
           ) : (
             <MnemonicViewer
               mnemonics={card.mnemonics_pt}
-              romaji={card.romaji}
+              keywords={card.mnemonic_keyword ?? undefined}
               textClassName="text-muted-foreground px-1"
             />
           )}

@@ -118,7 +118,7 @@ function SoloIntro({ card }: { card: Card }) {
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
             Memory hook
           </p>
-          <MnemonicViewer mnemonics={card.mnemonics_pt} textClassName="text-foreground" />
+          <MnemonicViewer mnemonics={card.mnemonics_pt} keywords={card.mnemonic_keyword ?? undefined} textClassName="text-foreground" />
         </motion.div>
       )}
     </>
@@ -202,7 +202,7 @@ function PairIntro({ card, derived }: { card: Card; derived: Card }) {
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
             Memory hook ({card.romaji})
           </p>
-          <MnemonicViewer mnemonics={card.mnemonics_pt} textClassName="text-foreground" />
+          <MnemonicViewer mnemonics={card.mnemonics_pt} keywords={card.mnemonic_keyword ?? undefined} textClassName="text-foreground" />
         </motion.div>
       )}
     </>
