@@ -195,10 +195,12 @@ export function useSubmitReview() {
 
 ## Error Handling
 
-- Use an `ErrorBoundary` component at the page level
+- Use an `ErrorBoundary` component at the page level (class component in `src/components/ErrorBoundary.tsx`)
+- Every React Router route must specify `errorElement: <RouteErrorPage />` — both the parent layout route and every child route — so React Router never falls back to its default error UI
 - TanStack Query error states must be handled in every `useQuery` consumer
 - Auth errors redirect to `/` with a toast message
-- Never `console.error` in production — use a structured error handler
+- Never `console.error` in production — use `reportError()` from `src/lib/errorReporter.ts`
+- To wire an external error service (e.g. Sentry): call `setErrorReporter()` in `main.tsx` once at boot; the reporter is a no-op until configured
 
 ---
 

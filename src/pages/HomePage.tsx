@@ -27,11 +27,18 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import Layout from '@/components/Layout'
 import PageTransition from '@/components/PageTransition'
+import { FONT_OPTIONS, loadFont, persistAndApply } from '@/lib/fonts'
+import { useAppStore } from '@/lib/store'
 
 // ---------------------------------------------------------------------------
 // Component
@@ -46,6 +53,21 @@ export default function HomePage() {
 
   // Greeting initial — first letter of email or a fallback
   const initial = user?.email?.[0]?.toUpperCase() ?? '?'
+
+  // Font preference — individual primitive selectors to avoid object-equality
+  // issues with React 19 + Zustand's useSyncExternalStore (returning a new
+  // object every render causes an infinite re-render loop).
+  const fontId = useAppStore((s) => s.fontId)
+  const setFontId = useAppStore((s) => s.setFontId)
+
+  const handleFontChange = async (newFontId: string) => {
+    // Lazy-load the font CSS (no-op for the default Noto Sans JP)
+    await loadFont(newFontId)
+    // Persist to localStorage and apply the CSS variable immediately
+    persistAndApply(newFontId)
+    // Update store so the radio item reflects the new selection
+    setFontId(newFontId)
+  }
 
   return (
     <PageTransition>
@@ -73,10 +95,29 @@ export default function HomePage() {
                   {initial}
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuContent align="end" className="w-52">
                 <DropdownMenuLabel className="text-xs font-normal text-muted-foreground truncate">
                   {user?.email}
                 </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+
+                {/* Font picker submenu */}
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>Fonte</DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent>
+                    <DropdownMenuRadioGroup
+                      value={fontId}
+                      onValueChange={(id) => { void handleFontChange(id) }}
+                    >
+                      {FONT_OPTIONS.map((font) => (
+                        <DropdownMenuRadioItem key={font.id} value={font.id}>
+                          {font.label}
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={logout}>
                   Sign out

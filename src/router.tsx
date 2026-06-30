@@ -9,6 +9,7 @@ import {
 } from 'react-router-dom'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
+import { reportError } from '@/lib/errorReporter'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -43,6 +44,8 @@ const ProgressPage = lazyWithRetry(() => import('@/pages/ProgressPage'))
 
 function RouteErrorPage() {
   const error = useRouteError()
+
+  const is404 = isRouteErrorResponse(error) && error.status === 404
   const isChunkError =
     error instanceof TypeError && error.message.includes('dynamically imported module')
 
@@ -50,9 +53,19 @@ function RouteErrorPage() {
     ? `${error.status} ${error.statusText}`
     : 'Something went wrong'
 
-  const description = isChunkError
+  const description = is404
+    ? "The page you were looking for doesn't exist."
+    : isChunkError
     ? 'The app was updated. Reload to get the latest version.'
     : 'An unexpected error occurred. Try refreshing the page.'
+
+  // Report unexpected errors (not 404s or deliberate chunk reloads) to the
+  // external error service configured in errorReporter.ts.
+  useEffect(() => {
+    if (!is404 && !isChunkError && error instanceof Error) {
+      reportError(error)
+    }
+  }, [error, is404, isChunkError])
 
   return (
     <div className="flex min-h-svh items-center justify-center p-4">
@@ -91,25 +104,32 @@ function PageLoader() {
  * Guards all routes that require an authenticated Supabase session.
  *
  * Auth resolution strategy:
- * 1. On mount: call `supabase.auth.getSession()` to check the existing session.
- * 2. Subscribe to `onAuthStateChange` for live updates.
- * 3. Show a loading indicator while the initial resolution is in flight.
- * 4. If unauthenticated → redirect to `/`.
+ * - Drive auth state from a single `onAuthStateChange` subscription only.
+ * - Initialise session as `undefined` (loading) and update on the first event
+ *   (`INITIAL_SESSION`, `SIGNED_IN`, or `SIGNED_OUT`).
+ * - Show a loading indicator until the first event fires.
+ * - If unauthenticated → redirect to `/`.
  *
- * Seam for A1: A1 can additionally call `setAuthSession` in `src/lib/store.ts`
- * inside the same `onAuthStateChange` listener to keep the Zustand store in sync
- * without restructuring this component.
+ * Why NOT `getSession()` first:
+ * After Google OAuth, Supabase returns tokens in the URL hash at the redirect
+ * target (`/home`). The client must asynchronously extract and exchange those
+ * tokens before a session exists. Calling `getSession()` immediately on mount
+ * races against this hash processing and returns `null`, triggering a redirect
+ * to `/` before `onAuthStateChange` fires `SIGNED_IN`. Using only
+ * `onAuthStateChange` lets the Supabase client always be the source of truth —
+ * it fires `INITIAL_SESSION` for existing sessions and `SIGNED_IN` after OAuth.
+ *
+ * Seam for A1: A1 calls `setAuthSession` in `src/lib/store.ts` inside a
+ * separate `onAuthStateChange` listener (via AppAuthProvider) to keep the
+ * Zustand store in sync without restructuring this component.
  */
 function ProtectedRoute() {
   const [session, setSession] = useState<Session | null | undefined>(undefined)
 
   useEffect(() => {
-    // Resolve the existing session once on mount.
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session)
-    })
-
-    // Keep in sync with auth state changes (login / logout / token refresh).
+    // Drive auth state from onAuthStateChange only — avoids the getSession()
+    // race condition on OAuth redirect (see JSDoc above).
+    // Fires INITIAL_SESSION (existing/null session) or SIGNED_IN (after OAuth).
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s)
     })
@@ -165,6 +185,7 @@ const router = createBrowserRouter([
     children: [
       {
         path: '/home',
+        errorElement: <RouteErrorPage />,
         element: (
           <Suspense fallback={<PageLoader />}>
             <HomePage />
@@ -173,6 +194,7 @@ const router = createBrowserRouter([
       },
       {
         path: '/session',
+        errorElement: <RouteErrorPage />,
         element: (
           <Suspense fallback={<PageLoader />}>
             <SessionPage />
@@ -181,6 +203,7 @@ const router = createBrowserRouter([
       },
       {
         path: '/infinite-review',
+        errorElement: <RouteErrorPage />,
         element: (
           <Suspense fallback={<PageLoader />}>
             <InfiniteReviewPage />
@@ -189,6 +212,7 @@ const router = createBrowserRouter([
       },
       {
         path: '/progress',
+        errorElement: <RouteErrorPage />,
         element: (
           <Suspense fallback={<PageLoader />}>
             <ProgressPage />
