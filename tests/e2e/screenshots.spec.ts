@@ -184,3 +184,37 @@ test.describe('@screenshot review-drill-feedback', () => {
     })
   })
 })
+
+/**
+ * Font picker (PER-40). Opens the avatar dropdown on /home, then opens the
+ * "Fonte" submenu to show all 4 font options. Also captures the home screen
+ * with Klee One applied so the kana characters render in textbook style.
+ */
+test.describe('@screenshot font-picker', () => {
+  test('capture font picker submenu + applied font', async ({ authedPage }, testInfo) => {
+    const project = testInfo.project.name
+
+    await authedPage.goto('/home')
+    await authedPage.waitForLoadState('networkidle')
+
+    // Open the avatar dropdown
+    await authedPage.getByRole('button', { name: /Account menu/ }).click()
+    // Hover the Fonte sub-trigger to open the submenu
+    await authedPage.getByText('Fonte').hover()
+    await authedPage.waitForTimeout(300) // allow submenu animation
+
+    await authedPage.screenshot({
+      path: `screenshots/font-picker-${project}.png`,
+      fullPage: false,
+    })
+
+    // Select "Livro didático" (Klee One) and capture the result
+    await authedPage.getByRole('menuitemradio', { name: 'Livro didático' }).click()
+    await authedPage.waitForLoadState('networkidle')
+
+    await authedPage.screenshot({
+      path: `screenshots/font-klee-one-${project}.png`,
+      fullPage: true,
+    })
+  })
+})

@@ -57,6 +57,10 @@ export interface ButtonProps
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
+    // Cast to 'button' so TypeScript resolves props against React.ButtonHTMLAttributes
+    // and avoids the CSSProperties type mismatch between @radix-ui/react-slot and
+    // @types/react@19 (duplicate installs disagree on the --radix-* index signature).
+    // At runtime Slot clones the child and forwards all props — the cast is safe.
     const Comp = (asChild ? Slot : 'button') as 'button'
     return (
       <Comp
