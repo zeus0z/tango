@@ -21,6 +21,28 @@
     <meta name="twitter:title" content="Tango — Learn Japanese with Spaced Repetition" />
     <meta name="twitter:description" content="Master hiragana and katakana through smart spaced repetition, following the Genki I/II curriculum." />
     <meta name="twitter:image" content="/pwa-512x512.png" />
+
+    <!-- ── Japanese font — prevent FOUT ────────────────────────────────────
+         Reads the persisted font choice from localStorage and immediately
+         sets --font-ja on <html> before any React code runs. This ensures
+         the correct font-family is in the cascade from the very first paint,
+         eliminating the flash of the default system font.                   -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('tango-ja-font');
+          var families = {
+            'noto-sans':     '"Noto Sans JP","Hiragino Sans","Yu Gothic",sans-serif',
+            'klee-one':      '"Klee One",cursive',
+            'noto-serif':    '"Noto Serif JP","Yu Mincho",serif',
+            'm-plus-rounded':'"M PLUS Rounded 1c",sans-serif'
+          };
+          if (stored && families[stored]) {
+            document.documentElement.style.setProperty('--font-ja', families[stored]);
+          }
+        } catch (e) { /* localStorage blocked — silently use CSS default */ }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
