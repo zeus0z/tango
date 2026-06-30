@@ -158,32 +158,36 @@ function TeachingSessionView({ teachingPlan, userId }: TeachingSessionProps) {
   // Handle answer from a drill card.
   //
   // Learn mode never asks the user to judge difficulty — every correct
-  // drill answer auto-rates 'Good', every wrong one auto-rates 'Again' (as
-  // before). Persistence happens immediately; advancing/requeuing is
-  // deferred to handleDrillNext so the feedback colors stay visible until
-  // the user explicitly taps "Next".
+  // drill answer auto-rates 'Good', every wrong one auto-rates 'Again'.
+  //
+  // PER-39: UI state (stats, pendingWrong, showNextButton) updates immediately
+  // so the Next button appears without waiting for the Supabase round-trips.
+  // Persistence runs in the background; errors surface via toast.
   // -------------------------------------------------------------------------
   const handleDrillAnswer = useCallback(
-    async (correct: boolean) => {
+    (correct: boolean) => {
       if (!currentItem || currentItem.kind !== 'drill') return
 
-      try {
-        const progress = await fetchCardProgress(userId, currentItem.card.id)
-        await persistReview(userId, currentItem.card.id, correct ? 'Good' : 'Again', progress)
-      } catch (err) {
-        console.error('Failed to persist review:', err)
-        toast.error('Could not save review — check your connection.')
-      }
-
+      // Update UI immediately — Next button appears right away.
       setStats((prev) => ({
         ...prev,
         totalReviewed: prev.totalReviewed + 1,
         totalCorrect: prev.totalCorrect + (correct ? 1 : 0),
       }))
       incrementReviewed()
-
       setPendingWrong(!correct)
       setShowNextButton(true)
+
+      // Persist in the background — do not block the UI.
+      void (async () => {
+        try {
+          const progress = await fetchCardProgress(userId, currentItem.card.id)
+          await persistReview(userId, currentItem.card.id, correct ? 'Good' : 'Again', progress)
+        } catch (err) {
+          console.error('Failed to persist review:', err)
+          toast.error('Could not save review — check your connection.')
+        }
+      })()
     },
     [currentItem, userId, incrementReviewed],
   )
@@ -328,27 +332,28 @@ function ReviewSessionView({ initialQueue, userId, newCardIds }: ReviewSessionPr
   const currentCard = queue[currentIndex]
 
   const handleAnswer = useCallback(
-    async (correct: boolean) => {
+    (correct: boolean) => {
       if (!currentCard) return
 
       if (!correct) {
-        try {
-          const progress = await fetchCardProgress(userId, currentCard.id)
-          await persistReview(userId, currentCard.id, 'Again', progress)
-        } catch (err) {
-          console.error('Failed to persist review:', err)
-          toast.error('Could not save review — check your connection.')
-        }
-
+        // PER-39: update UI immediately — Next button appears right away.
         setStats((prev) => ({
           ...prev,
           totalReviewed: prev.totalReviewed + 1,
         }))
         incrementReviewed()
-
-        // Persisted immediately, but the requeue/advance waits for an
-        // explicit "Next" tap so the feedback colors stay visible.
         setShowNextButton(true)
+
+        // Persist in the background — do not block the UI.
+        void (async () => {
+          try {
+            const progress = await fetchCardProgress(userId, currentCard.id)
+            await persistReview(userId, currentCard.id, 'Again', progress)
+          } catch (err) {
+            console.error('Failed to persist review:', err)
+            toast.error('Could not save review — check your connection.')
+          }
+        })()
       } else {
         setShowRatingButtons(true)
       }

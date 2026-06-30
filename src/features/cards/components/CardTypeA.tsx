@@ -54,14 +54,11 @@ export function CardTypeA({ card, onAnswer, revealed = false, onReveal, mnemonic
 
   function handleAnswer(correct: boolean) {
     setFeedback(correct ? 'correct' : 'wrong')
-  }
-
-  function handleAnimationComplete() {
-    if (feedback !== 'idle') {
-      // Feedback color intentionally stays — the session view controls
-      // when this card unmounts (after an explicit "Next" tap).
-      onAnswer(feedback === 'correct')
-    }
+    // Fire onAnswer immediately alongside the color change.
+    // Do NOT gate on onAnimationComplete — that 0.4–0.5s delay before the
+    // Next button appeared was the bug fixed by PER-39. The visual flash
+    // animation still runs; we just decouple it from downstream state.
+    onAnswer(correct)
   }
 
   return (
@@ -69,7 +66,6 @@ export function CardTypeA({ card, onAnswer, revealed = false, onReveal, mnemonic
       {/* ── Card face ─────────────────────────────────────────────────────── */}
       <AnswerFeedback
         feedback={feedback}
-        onAnimationComplete={handleAnimationComplete}
         onClick={!revealed ? onReveal : undefined}
         className={cn(
           'relative w-full rounded-3xl shadow-md',
