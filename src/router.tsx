@@ -9,6 +9,7 @@ import {
 } from 'react-router-dom'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
+import { reportError } from '@/lib/errorReporter'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -43,6 +44,8 @@ const ProgressPage = lazyWithRetry(() => import('@/pages/ProgressPage'))
 
 function RouteErrorPage() {
   const error = useRouteError()
+
+  const is404 = isRouteErrorResponse(error) && error.status === 404
   const isChunkError =
     error instanceof TypeError && error.message.includes('dynamically imported module')
 
@@ -50,9 +53,19 @@ function RouteErrorPage() {
     ? `${error.status} ${error.statusText}`
     : 'Something went wrong'
 
-  const description = isChunkError
+  const description = is404
+    ? "The page you were looking for doesn't exist."
+    : isChunkError
     ? 'The app was updated. Reload to get the latest version.'
     : 'An unexpected error occurred. Try refreshing the page.'
+
+  // Report unexpected errors (not 404s or deliberate chunk reloads) to the
+  // external error service configured in errorReporter.ts.
+  useEffect(() => {
+    if (!is404 && !isChunkError && error instanceof Error) {
+      reportError(error)
+    }
+  }, [error, is404, isChunkError])
 
   return (
     <div className="flex min-h-svh items-center justify-center p-4">
@@ -172,6 +185,7 @@ const router = createBrowserRouter([
     children: [
       {
         path: '/home',
+        errorElement: <RouteErrorPage />,
         element: (
           <Suspense fallback={<PageLoader />}>
             <HomePage />
@@ -180,6 +194,7 @@ const router = createBrowserRouter([
       },
       {
         path: '/session',
+        errorElement: <RouteErrorPage />,
         element: (
           <Suspense fallback={<PageLoader />}>
             <SessionPage />
@@ -188,6 +203,7 @@ const router = createBrowserRouter([
       },
       {
         path: '/infinite-review',
+        errorElement: <RouteErrorPage />,
         element: (
           <Suspense fallback={<PageLoader />}>
             <InfiniteReviewPage />
@@ -196,6 +212,7 @@ const router = createBrowserRouter([
       },
       {
         path: '/progress',
+        errorElement: <RouteErrorPage />,
         element: (
           <Suspense fallback={<PageLoader />}>
             <ProgressPage />
