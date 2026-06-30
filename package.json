@@ -19,6 +19,10 @@
     "seed": "supabase db reset"
   },
   "dependencies": {
+    "@fontsource/klee-one": "^5.2.8",
+    "@fontsource/m-plus-rounded-1c": "^5.2.10",
+    "@fontsource/noto-sans-jp": "^5.2.9",
+    "@fontsource/noto-serif-jp": "^5.2.8",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.18",
     "@radix-ui/react-progress": "^1.1.8",
