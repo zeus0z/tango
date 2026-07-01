@@ -17,6 +17,7 @@
 import { useNavigate } from 'react-router-dom'
 import type { SessionMode } from '@/types'
 import { cn } from '@/lib/utils'
+import { t } from '@/lib/constants/strings'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -38,24 +39,24 @@ const MODES: ModeConfig[] = [
   {
     mode: 'learn',
     emoji: '🌱',
-    label: 'Learn',
-    description: '5 new + due today',
+    label: t.sessionMode.learnLabel,
+    description: t.sessionMode.learnDescription,
     colourClass:
       'bg-green-50 border-green-200 text-green-900 active:bg-green-100',
   },
   {
     mode: 'review-recent',
     emoji: '🔁',
-    label: 'Review Recent',
-    description: 'Last 7 days, due now',
+    label: t.sessionMode.reviewRecentLabel,
+    description: t.sessionMode.reviewRecentDescription,
     colourClass:
       'bg-amber-50 border-amber-200 text-amber-900 active:bg-amber-100',
   },
   {
     mode: 'review-all',
     emoji: '📚',
-    label: 'Review All',
-    description: 'All due today',
+    label: t.sessionMode.reviewAllLabel,
+    description: t.sessionMode.reviewAllDescription,
     colourClass:
       'bg-blue-50 border-blue-200 text-blue-900 active:bg-blue-100',
   },
@@ -76,7 +77,7 @@ export function SessionModeSelector() {
   return (
     <div className="space-y-3">
       <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-        Start a session
+        {t.sessionMode.heading}
       </h2>
 
       <div className="flex flex-col gap-2.5">
@@ -103,7 +104,7 @@ export function SessionModeSelector() {
             {/* Daily spaced repetition is the primary path to fluency. */}
             {mode === 'learn' && (
               <p className="px-1 text-xs font-medium text-green-600">
-                Do this daily to become fluent in Japanese.
+                {t.sessionMode.learnTip}
               </p>
             )}
           </div>
@@ -123,8 +124,8 @@ export function SessionModeSelector() {
             ♾️
           </span>
           <div>
-            <p className="text-sm font-semibold leading-tight">Infinite Review</p>
-            <p className="text-xs opacity-70">Practice all learnt cards</p>
+            <p className="text-sm font-semibold leading-tight">{t.sessionMode.infiniteLabel}</p>
+            <p className="text-xs opacity-70">{t.sessionMode.infiniteDescription}</p>
           </div>
         </button>
       </div>

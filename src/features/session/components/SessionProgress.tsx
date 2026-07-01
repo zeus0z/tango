@@ -4,6 +4,7 @@
  */
 
 import { motion } from 'framer-motion'
+import { t } from '@/lib/constants/strings'
 
 interface SessionProgressProps {
   current: number
@@ -23,7 +24,7 @@ export function SessionProgress({ current, total, onExit }: SessionProgressProps
             onClick={onExit}
             className="min-h-[44px] px-3 -ml-1 rounded-lg text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground active:bg-muted/60 cursor-pointer"
           >
-            ← Home
+            {t.common.backHome}
           </button>
           <span className="text-xs font-medium text-muted-foreground tabular-nums">
             {current} / {total}

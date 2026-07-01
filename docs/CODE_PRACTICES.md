@@ -244,3 +244,31 @@ Every feature folder ships a barrel `src/features/<name>/index.ts` exposing only
 - Routing is owned by F7 (`src/router.tsx`) — feature work never edits the router.
 - Use `sonner` for toasts (not Radix toast). It's already wired by F7.
 - Library docs: use the **`context7` MCP** (`mcp__context7__resolve-library-id` → `mcp__context7__query-docs`) for any library, framework, SDK, API, or CLI — see CLAUDE.md Golden Rules.
+
+---
+
+## Internationalisation (i18n)
+
+**Architecture: zero-dependency constant catalog. Single locale: pt-BR. No language toggle (YAGNI).**
+
+All user-facing strings live in `src/lib/constants/strings.ts`, exported as the `t` object. Components import and use it directly — no i18n runtime, no context, no lazy loading.
+
+```ts
+import { t } from '@/lib/constants/strings'
+
+// Static string
+<h1>{t.landing.headline}</h1>
+
+// Interpolated (exported as arrow functions)
+<p>{t.home.signedInAs(user.email)}</p>
+<p>{t.heatmap.cardCount(count)}</p>
+```
+
+### Rules
+- **Every user-visible string must come from `t`** — no hardcoded English (or Portuguese) in JSX or toasts.
+- `t` is re-exported from `src/lib/constants/index.ts` — you can import from either path.
+- Interpolated strings are tiny arrow functions inside the `t` object. Keep them pure (no side effects).
+- Do **NOT** translate: Japanese/romaji text, proper nouns (Genki, Tango, FSRS, Google), developer-only strings (console logs, error reporter payloads), test files, Supabase migrations.
+- The `shadcn` primitives in `src/components/ui/` are not translated — they are headless and emit no visible text.
+- When adding a new screen or toast, add its strings to `strings.ts` first, under the appropriate section. If a new section is needed, add it with a comment header.
+- Mastery state values (`'Unseen' | 'Learning' | 'Review' | 'Mastered'`) are TypeScript discriminated-union keys — never change them. Their display labels live at `t.mastery.*` and must be used wherever the state is shown to the user.

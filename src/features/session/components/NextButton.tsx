@@ -8,6 +8,7 @@
  */
 
 import { Button } from '@/components/ui/button'
+import { t } from '@/lib/constants/strings'
 
 interface NextButtonProps {
   onClick: () => void
@@ -22,7 +23,7 @@ export function NextButton({ onClick, disabled = false }: NextButtonProps) {
       className="w-full min-h-[56px] text-base font-bold rounded-2xl"
       onClick={onClick}
     >
-      Next →
+      {t.common.next}
     </Button>
   )
 }

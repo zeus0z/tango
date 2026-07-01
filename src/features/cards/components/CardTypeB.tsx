@@ -19,6 +19,7 @@ import { AnswerFeedback, type FeedbackState } from './AnswerFeedback'
 import { MnemonicViewer } from './MnemonicViewer'
 import { cn } from '@/lib/utils'
 import { speakHiragana } from '../utils/speak'
+import { t } from '@/lib/constants/strings'
 
 // ---------------------------------------------------------------------------
 // Props
@@ -162,7 +163,7 @@ export function CardTypeB({ card, onAnswer, revealed = false, onReveal, mnemonic
         {revealed && (
           <button
             type="button"
-            aria-label="Play pronunciation"
+            aria-label={t.common.playPronunciation}
             onClick={(e) => {
               e.stopPropagation()
               speakHiragana(card.character)
@@ -221,7 +222,7 @@ export function CardTypeB({ card, onAnswer, revealed = false, onReveal, mnemonic
                 size="sm"
                 onClick={() => setMnemonicOpen((prev) => !prev)}
               >
-                💡 Show mnemonic
+                {t.common.showMnemonic}
               </Button>
               {mnemonicOpen && (
                 <MnemonicViewer

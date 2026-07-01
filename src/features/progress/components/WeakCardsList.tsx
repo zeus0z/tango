@@ -11,6 +11,7 @@
 import { cn } from '@/lib/utils'
 import type { MasteryState } from '@/types'
 import type { WeakCardRow } from '../services/progress.service'
+import { t } from '@/lib/constants/strings'
 
 // ---------------------------------------------------------------------------
 // Props
@@ -45,7 +46,7 @@ export function WeakCardsList({
   if (rows.length === 0) {
     return (
       <p className="text-sm text-muted-foreground text-center py-6">
-        No weak cards yet — keep reviewing!
+        {t.weakCards.noWeakCards}
       </p>
     )
   }
@@ -73,7 +74,7 @@ export function WeakCardsList({
               'min-h-[48px]', // ≥48px tap target
               'bg-background active:bg-muted/50 transition-colors duration-150',
             )}
-            aria-label={`${row.character} (${row.romaji}) — ${accuracyPct}% accuracy`}
+            aria-label={t.weakCards.characterAriaLabel(row.character, row.romaji, accuracyPct)}
           >
             {/* Character */}
             <span lang="ja" className="font-ja text-2xl font-medium w-8 text-center">
@@ -100,7 +101,7 @@ export function WeakCardsList({
                 MASTERY_PILL[mastery],
               )}
             >
-              {mastery}
+              {t.mastery[mastery]}
             </span>
           </button>
         )

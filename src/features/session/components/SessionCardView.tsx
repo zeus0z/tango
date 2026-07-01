@@ -23,6 +23,7 @@ import type { UIRating } from '@/lib/fsrs'
 import { persistReview, fetchCardProgress } from '../utils/persistReview'
 import type { TeachingItem } from '../utils/buildSession'
 import { RatingButtons } from './RatingButtons'
+import { t } from '@/lib/constants/strings'
 import { NextButton } from './NextButton'
 import { SessionProgress } from './SessionProgress'
 import { SessionSummary } from './SessionSummary'
@@ -185,7 +186,7 @@ function TeachingSessionView({ teachingPlan, userId }: TeachingSessionProps) {
           await persistReview(userId, currentItem.card.id, correct ? 'Good' : 'Again', progress)
         } catch (err) {
           console.error('Failed to persist review:', err)
-          toast.error('Could not save review — check your connection.')
+          toast.error(t.session.couldNotSaveReview)
         }
       })()
     },
@@ -351,7 +352,7 @@ function ReviewSessionView({ initialQueue, userId, newCardIds }: ReviewSessionPr
             await persistReview(userId, currentCard.id, 'Again', progress)
           } catch (err) {
             console.error('Failed to persist review:', err)
-            toast.error('Could not save review — check your connection.')
+            toast.error(t.session.couldNotSaveReview)
           }
         })()
       } else {

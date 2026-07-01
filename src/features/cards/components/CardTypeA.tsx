@@ -18,6 +18,7 @@ import { MnemonicViewer } from './MnemonicViewer'
 import { RomajiGrid } from './RomajiGrid'
 import { cn } from '@/lib/utils'
 import { speakHiragana } from '../utils/speak'
+import { t } from '@/lib/constants/strings'
 
 // ---------------------------------------------------------------------------
 // Props
@@ -78,7 +79,7 @@ export function CardTypeA({ card, onAnswer, revealed = false, onReveal, mnemonic
         {/* Speaker button — top-right, always visible on Type A */}
         <button
           type="button"
-          aria-label="Play pronunciation"
+          aria-label={t.common.playPronunciation}
           onClick={(e) => {
             e.stopPropagation()
             speakHiragana(card.character)
@@ -114,7 +115,7 @@ export function CardTypeA({ card, onAnswer, revealed = false, onReveal, mnemonic
         >
           {showPrompt && (
             <p className="text-center text-sm text-muted-foreground">
-              Qual som ele faz?
+              {t.introduce.promptQuiz}
             </p>
           )}
           <RomajiGrid
@@ -140,7 +141,7 @@ export function CardTypeA({ card, onAnswer, revealed = false, onReveal, mnemonic
                 className="text-primary hover:text-primary/80 hover:bg-primary/10"
                 onClick={() => setMnemonicOpen((prev) => !prev)}
               >
-                💡 Show mnemonic
+                {t.common.showMnemonic}
               </Button>
               {mnemonicOpen && (
                 <MnemonicViewer

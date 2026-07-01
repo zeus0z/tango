@@ -6,6 +6,7 @@
 
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
+import { t } from '@/lib/constants/strings'
 
 interface SessionSummaryProps {
   totalReviewed: number
@@ -27,15 +28,15 @@ export function SessionSummary({ totalReviewed, totalCorrect, newLearned }: Sess
       {/* Header */}
       <div className="text-center">
         <p className="text-4xl mb-2">🎉</p>
-        <h1 className="text-2xl font-bold text-foreground">Session Complete!</h1>
-        <p className="text-sm text-muted-foreground mt-1">Here's how you did</p>
+        <h1 className="text-2xl font-bold text-foreground">{t.sessionSummary.title}</h1>
+        <p className="text-sm text-muted-foreground mt-1">{t.sessionSummary.subtitle}</p>
       </div>
 
       {/* Stats grid */}
       <div className="w-full grid grid-cols-3 gap-3">
-        <StatCard label="Reviewed" value={String(totalReviewed)} />
-        <StatCard label="Accuracy" value={`${accuracy}%`} highlight={accuracy >= 80} />
-        <StatCard label="Learned" value={String(newLearned)} />
+        <StatCard label={t.sessionSummary.reviewed} value={String(totalReviewed)} />
+        <StatCard label={t.sessionSummary.accuracy} value={`${accuracy}%`} highlight={accuracy >= 80} />
+        <StatCard label={t.sessionSummary.learned} value={String(newLearned)} />
       </div>
 
       {/* Return home */}
@@ -44,7 +45,7 @@ export function SessionSummary({ totalReviewed, totalCorrect, newLearned }: Sess
         onClick={() => navigate('/home')}
         className="w-full min-h-[56px] rounded-2xl bg-primary text-primary-foreground font-bold text-base active:scale-95 transition-transform duration-75 shadow-sm"
       >
-        Return Home
+        {t.sessionSummary.returnHome}
       </button>
     </motion.div>
   )

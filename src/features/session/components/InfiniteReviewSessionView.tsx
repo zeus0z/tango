@@ -15,6 +15,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { CardTypeB } from '@/features/cards'
 import { NextButton } from './NextButton'
 import type { Card } from '@/types'
+import { t } from '@/lib/constants/strings'
 
 interface InfiniteReviewSessionViewProps {
   /** All learnt cards of the chosen script. */
@@ -109,10 +110,10 @@ export function InfiniteReviewSessionView({ cards }: InfiniteReviewSessionViewPr
           onClick={() => navigate('/home')}
           className="min-h-[44px] px-3 -ml-1 rounded-lg text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground active:bg-muted/60 cursor-pointer"
         >
-          ✕ Exit
+          {t.common.exit}
         </button>
         <span className="text-xs font-medium text-muted-foreground tabular-nums">
-          {reviewedCount} reviewed
+          {t.infiniteReview.reviewed(reviewedCount)}
         </span>
       </div>
 

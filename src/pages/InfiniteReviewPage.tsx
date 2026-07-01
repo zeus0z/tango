@@ -16,6 +16,7 @@ import { useAppStore } from '@/lib/store'
 import { useLearntScriptCounts } from '@/features/session'
 import type { ScriptType } from '@/types'
 import { cn } from '@/lib/utils'
+import { t } from '@/lib/constants/strings'
 
 interface ScriptOption {
   script: ScriptType
@@ -51,29 +52,26 @@ export default function InfiniteReviewPage() {
           onClick={() => navigate('/home')}
           className="min-h-[44px] self-start -ml-1 px-2 rounded-lg text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground active:bg-muted/60 cursor-pointer"
         >
-          ← Home
+          {t.infiniteReview.backHome}
         </button>
 
         <div className="mt-4 space-y-2">
           <h1 className="flex items-center gap-2 text-2xl font-bold text-foreground">
-            <span aria-hidden="true">♾️</span> Infinite Review
+            <span aria-hidden="true">♾️</span> {t.infiniteReview.title}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Practice <span className="font-medium text-foreground">every card you've
-            already learnt</span> of one script, on an endless loop. Great for extra
-            drilling before a test.
+            {t.infiniteReview.descPart1}<span className="font-medium text-foreground">{t.infiniteReview.descBold}</span>{t.infiniteReview.descPart2}
           </p>
           <p className="text-xs text-muted-foreground">
-            This is practice only — it{' '}
-            <span className="font-medium">does not affect your spaced-repetition
-            schedule</span>. For real progress, keep doing your daily Learn sessions.
+            {t.infiniteReview.detailPart1}{' '}
+            <span className="font-medium">{t.infiniteReview.detailBold}</span>{t.infiniteReview.detailPart2}
           </p>
         </div>
 
         {/* Script chooser */}
         <div className="mt-8 space-y-3">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Choose a script
+            {t.infiniteReview.chooseScript}
           </h2>
 
           <div className="flex flex-col gap-2.5">
@@ -105,10 +103,10 @@ export default function InfiniteReviewPage() {
                     <p className="text-sm font-semibold leading-tight">{label}</p>
                     <p className="text-xs opacity-70">
                       {isLoading
-                        ? 'Loading…'
+                        ? t.infiniteReview.loadingCount
                         : count === 0
-                          ? 'No cards learnt yet'
-                          : `${count} card${count === 1 ? '' : 's'} learnt`}
+                          ? t.infiniteReview.noCardsYet
+                          : t.infiniteReview.cardCount(count)}
                     </p>
                   </div>
                 </button>
@@ -131,7 +129,7 @@ export default function InfiniteReviewPage() {
                 : 'cursor-not-allowed bg-muted text-muted-foreground',
             )}
           >
-            Start practising
+            {t.infiniteReview.startPractising}
           </button>
         </div>
       </div>

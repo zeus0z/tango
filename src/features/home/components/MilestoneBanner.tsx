@@ -15,6 +15,7 @@ import { useState, useMemo } from 'react'
 import { HIRAGANA, GENKI_ORDER } from '@/lib/constants/hiragana'
 import type { MasteryState } from '@/types'
 import { cn } from '@/lib/utils'
+import { t } from '@/lib/constants/strings'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -23,16 +24,6 @@ import { cn } from '@/lib/utils'
 interface MilestoneBannerProps {
   /** Character → MasteryState map. */
   progress: Record<string, MasteryState>
-}
-
-// ---------------------------------------------------------------------------
-// Group label formatting
-// ---------------------------------------------------------------------------
-
-function formatGroupLabel(groupName: string): string {
-  if (groupName === 'vowel') return 'vowel group (あいうえお)'
-  if (groupName === 'n') return 'standalone ん'
-  return `${groupName} group`
 }
 
 // ---------------------------------------------------------------------------
@@ -66,7 +57,7 @@ export function MilestoneBanner({ progress }: MilestoneBannerProps) {
   return (
     <button
       type="button"
-      aria-label="Dismiss milestone banner"
+      aria-label={t.milestone.dismissAriaLabel}
       onClick={() =>
         setDismissed((prev) => {
           const next = new Set(prev)
@@ -83,9 +74,9 @@ export function MilestoneBanner({ progress }: MilestoneBannerProps) {
       )}
     >
       <p className="text-sm font-semibold">
-        You completed the {formatGroupLabel(banner)}!
+        {t.milestone.completedBanner(t.milestone.formatGroupLabel(banner))}
       </p>
-      <p className="mt-0.5 text-xs text-green-700">Tap to dismiss</p>
+      <p className="mt-0.5 text-xs text-green-700">{t.milestone.tapToDismiss}</p>
     </button>
   )
 }

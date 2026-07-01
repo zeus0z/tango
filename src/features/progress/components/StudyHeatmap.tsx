@@ -12,6 +12,7 @@
 import { useMemo } from 'react'
 import { cn } from '@/lib/utils'
 import type { DayCount } from '../services/progress.service'
+import { t } from '@/lib/constants/strings'
 
 // ---------------------------------------------------------------------------
 // Props
@@ -39,9 +40,6 @@ function countToColour(count: number): string {
   if (count < 20) return 'bg-green-400'
   return 'bg-green-500'
 }
-
-const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-const DISPLAYED_DAYS = ['Mon', 'Wed', 'Fri'] // only label a few rows to avoid clutter
 
 // ---------------------------------------------------------------------------
 // Component
@@ -94,7 +92,7 @@ export function StudyHeatmap({ data, weeks = 12 }: StudyHeatmapProps) {
         if (!seenMonths.has(monthKey) && cursor.getUTCDate() <= 7) {
           seenMonths.add(monthKey)
           monthLabelsArr.push({
-            label: cursor.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' }),
+            label: t.heatmap.months[cursor.getUTCMonth()],
             weekIndex: weeksArr.length,
           })
         }
@@ -132,11 +130,11 @@ export function StudyHeatmap({ data, weeks = 12 }: StudyHeatmapProps) {
 
       {/* Grid body: day labels + cells */}
       <div className="flex gap-1">
-        {/* Day-of-week labels (Mon, Wed, Fri only) */}
+        {/* Day-of-week labels (2ª, 4ª, 6ª only) */}
         <div className="flex flex-col gap-px mt-px">
-          {DAY_LABELS.map((label) => (
+          {(t.heatmap.dayLabels as readonly string[]).map((label) => (
             <div key={label} className="h-[14px] w-5 flex items-center justify-end pr-1">
-              {DISPLAYED_DAYS.includes(label) ? (
+              {(t.heatmap.displayedDays as readonly string[]).includes(label) ? (
                 <span className="text-[9px] text-muted-foreground">{label[0]}</span>
               ) : null}
             </div>
@@ -150,7 +148,7 @@ export function StudyHeatmap({ data, weeks = 12 }: StudyHeatmapProps) {
               {week.map((day) => (
                 <div
                   key={day.dateStr}
-                  title={`${day.dateStr}: ${day.count} review${day.count !== 1 ? 's' : ''}`}
+                  title={t.heatmap.cellTooltip(day.dateStr, day.count)}
                   className={cn(
                     'h-[14px] w-[14px] rounded-sm flex-shrink-0',
                     day.isFuture
@@ -167,7 +165,7 @@ export function StudyHeatmap({ data, weeks = 12 }: StudyHeatmapProps) {
 
       {/* Summary */}
       <p className="text-xs text-muted-foreground text-right pr-1">
-        {totalReviews.toLocaleString()} reviews in the last {weeks} weeks
+        {t.heatmap.summary(totalReviews, weeks)}
       </p>
     </div>
   )
