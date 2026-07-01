@@ -20,7 +20,7 @@ import type { Card } from '@/types'
 import { Button } from '@/components/ui/button'
 import { DIACRITICS } from '@/lib/constants/diacritics'
 import { MnemonicViewer } from '@/features/cards/components/MnemonicViewer'
-import { speakHiragana } from '@/features/cards/utils/speak'
+import { playKana } from '@/features/cards/utils/speak'
 import { cn } from '@/lib/utils'
 import { t } from '@/lib/constants/strings'
 
@@ -49,9 +49,9 @@ export function IntroduceCharacter({ card, derived, onAdvance }: IntroduceCharac
 
   // Auto-play on mount: base first, then derived (900ms after)
   useEffect(() => {
-    speakHiragana(card.character)
+    playKana(card.character, card.romaji)
     if (derived) {
-      const t = window.setTimeout(() => speakHiragana(derived.character), 900)
+      const t = window.setTimeout(() => playKana(derived.character, derived.romaji), 900)
       return () => window.clearTimeout(t)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -107,7 +107,7 @@ function SoloIntro({ card }: { card: Card }) {
         )}
       >
         {/* Speaker — top-right of character section */}
-        <SpeakerButton character={card.character} />
+        <SpeakerButton character={card.character} romaji={card.romaji} />
 
         <p lang="ja" className="font-ja text-[9rem] leading-none text-foreground select-none">
           {card.character}
@@ -256,7 +256,7 @@ function CharTile({ card }: { card: Card }) {
         'min-w-0',
       )}
     >
-      <SpeakerButton character={card.character} />
+      <SpeakerButton character={card.character} romaji={card.romaji} />
 
       <p lang="ja" className="font-ja text-7xl leading-none text-foreground select-none">
         {card.character}
@@ -272,14 +272,14 @@ function CharTile({ card }: { card: Card }) {
 // SpeakerButton
 // ---------------------------------------------------------------------------
 
-function SpeakerButton({ character }: { character: string }) {
+function SpeakerButton({ character, romaji }: { character: string; romaji: string }) {
   return (
     <button
       type="button"
       aria-label={t.common.playPronunciation}
       onClick={(e) => {
         e.stopPropagation()
-        speakHiragana(character)
+        playKana(character, romaji)
       }}
       className={cn(
         'absolute top-3 right-3',

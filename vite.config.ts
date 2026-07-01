@@ -30,7 +30,7 @@ export default defineConfig({
         // support .woff2, and the .woff fallback files for Japanese fonts can
         // exceed the Workbox 2 MiB per-file precache limit. .woff2 files for
         // all 4 bundled Japanese fonts are ≤1.9 MiB and are fully precached.
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,mp3}'],
         // Runtime caching for card images and any Supabase storage assets
         runtimeCaching: [
           {

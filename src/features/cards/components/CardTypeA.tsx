@@ -17,7 +17,7 @@ import { AnswerFeedback, type FeedbackState } from './AnswerFeedback'
 import { MnemonicViewer } from './MnemonicViewer'
 import { RomajiGrid } from './RomajiGrid'
 import { cn } from '@/lib/utils'
-import { speakHiragana } from '../utils/speak'
+import { playKana } from '../utils/speak'
 import { t } from '@/lib/constants/strings'
 
 // ---------------------------------------------------------------------------
@@ -82,7 +82,7 @@ export function CardTypeA({ card, onAnswer, revealed = false, onReveal, mnemonic
           aria-label={t.common.playPronunciation}
           onClick={(e) => {
             e.stopPropagation()
-            speakHiragana(card.character)
+            playKana(card.character, card.romaji)
           }}
           className={cn(
             'absolute top-3 right-3',

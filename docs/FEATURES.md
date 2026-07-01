@@ -56,6 +56,15 @@ Shown after login. Displays:
 
 ---
 
+## 4.5 Kana Pronunciation Audio
+
+- Tapping the speaker icon (Card Type A, Card Type B after reveal, and the character introduction screen) plays a native-quality recording of the kana's sound.
+- The introduction screen (`IntroduceCharacter`) also auto-plays audio on mount: base character first, then the derived character (for dakuten/handakuten pairs) 900 ms later.
+- Audio is a **static, offline-precached MP3 per sound**, keyed by **romaji** (not by glyph) — so hiragana and katakana share the exact same clip for identical sounds, and homophones (`じ`/`ぢ` → `ji`, `ず`/`づ` → `zu`) don't need duplicate files.
+- If a clip is missing or fails to play, playback falls back to the browser's Web Speech API so the app never goes silent — this fallback is not the primary path and should stay that way.
+
+---
+
 ## 5. Study Session (`/session`)
 
 ### Flow
@@ -192,6 +201,14 @@ A **secondary, optional** practice mode. Unlike spaced repetition (which surface
 - `NextButton.tsx`: single CTA, styled like `IntroduceCharacter`'s "Got it →" button. Used for: Learn mode (both outcomes), Review Recent/All's wrong-answer path, and Infinite Review (both outcomes, see §5.5).
 - Summary screen derives counters from session-local state, then "return home" → `/home`.
 - Session-internal state (queue, queue index, daily counters) lives in the Zustand `studySession` + `dailyProgress` slots.
+
+### §4.5 Kana Audio (PER-35)
+- `src/features/cards/utils/speak.ts` exports `playKana(character, romaji)`. Primary path: `new Audio('/audio/kana/${romaji}.mp3').play()`, cancelling any in-flight clip via a module-level ref first (mirrors the old `speechSynthesis.cancel()` behaviour without touching unrelated page speech). On an `error` event or a rejected `play()` promise (e.g. autoplay-blocked, missing file), it falls back to `SpeechSynthesisUtterance` — the same logic the old `speakHiragana` used, now private to this module.
+- Clips live in `public/audio/kana/*.mp3` (currently 102 files, ~680 KB total) and are precached by the PWA — `vite.config.ts`'s Workbox `globPatterns` includes `mp3`.
+- **Generation** (one-time, dev-machine only — not run in CI or at build time): `pnpm generate:audio` runs `scripts/generate-kana-audio.mjs`, which reads `scripts/kana-sounds.json` (the manifest: `{ id, text, script }`, `id` = romaji filename stem) and for each entry shells out to the `edge-tts` CLI (`ja-JP-NanamiNeural` voice, install via `pip install edge-tts` — not a repo dependency) then pipes through `ffmpeg` to trim silence, pad the tail, and loudness-normalize. Idempotent — pass `--force` to regenerate.
+- The manifest intentionally covers the **full standard kana inventory** (46 gojūon + 25 dakuten/handakuten + 33 youon = 102 unique romaji), not just the 71 currently-seeded `HIRAGANA` entries — so katakana and youon curriculum additions get audio "for free" without touching this pipeline again. `speak.test.ts`'s "kana audio manifest coverage" test guards that every seeded romaji has a manifest entry.
+- **Future extension — kanji / example words are out of scope for this pipeline.** Kanji have per-word readings (unbounded set, not a fixed per-glyph sound), so they'd need a `"word"`-scripted section in the same manifest keyed by `example_word_romaji`, generated per word as vocabulary is added — not built yet.
+- Voice: Microsoft Edge neural TTS via the unofficial `edge-tts` endpoint, used only as a one-time build tool — the repo ships only the resulting static MP3s, no runtime dependency on the tool or the endpoint. If that endpoint ever becomes unavailable, Wikimedia Commons' CC-licensed native-speaker kana recordings are the documented fallback source (requires attribution).
 
 ### §5.5 Infinite Review (PER-26)
 - Read-only queue builder `buildInfiniteReviewQueue(userId, script)` in `buildSession.ts`: like Review All but **no `due` filter** and `.eq('type', script)`; "learnt" = `user_card_progress.reps > 0`. `fetchLearntScriptCounts(userId)` returns per-script learnt counts to drive the setup screen's enable/disable.
