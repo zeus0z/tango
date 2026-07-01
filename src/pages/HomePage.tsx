@@ -16,29 +16,15 @@
  * See SessionModeSelector for the full contract documentation.
  */
 
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/features/auth/useAuth'
 import { useTodayLearnedCount, useCharacterMasteryMap } from '@/features/home/hooks/useHomeData'
 import { DailyGoalTracker } from '@/features/home/components/DailyGoalTracker'
 import { MilestoneBanner } from '@/features/home/components/MilestoneBanner'
 import { SessionModeSelector } from '@/features/home/components/SessionModeSelector'
 import { AlphabetProgressMap } from '@/components/AlphabetProgressMap'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import Layout from '@/components/Layout'
 import PageTransition from '@/components/PageTransition'
-import { FONT_OPTIONS, loadFont, persistAndApply } from '@/lib/fonts'
-import { useAppStore } from '@/lib/store'
 import { t } from '@/lib/constants/strings'
 
 // ---------------------------------------------------------------------------
@@ -46,7 +32,8 @@ import { t } from '@/lib/constants/strings'
 // ---------------------------------------------------------------------------
 
 export default function HomePage() {
-  const { user, logout } = useAuth()
+  const navigate = useNavigate()
+  const { user } = useAuth()
   const userId = user?.id
 
   const { data: learnedToday, isLoading: loadingCount } = useTodayLearnedCount(userId)
@@ -54,21 +41,6 @@ export default function HomePage() {
 
   // Greeting initial — first letter of email or a fallback
   const initial = user?.email?.[0]?.toUpperCase() ?? '?'
-
-  // Font preference — individual primitive selectors to avoid object-equality
-  // issues with React 19 + Zustand's useSyncExternalStore (returning a new
-  // object every render causes an infinite re-render loop).
-  const fontId = useAppStore((s) => s.fontId)
-  const setFontId = useAppStore((s) => s.setFontId)
-
-  const handleFontChange = async (newFontId: string) => {
-    // Lazy-load the font CSS (no-op for the default Noto Sans JP)
-    await loadFont(newFontId)
-    // Persist to localStorage and apply the CSS variable immediately
-    persistAndApply(newFontId)
-    // Update store so the radio item reflects the new selection
-    setFontId(newFontId)
-  }
 
   return (
     <PageTransition>
@@ -86,45 +58,15 @@ export default function HomePage() {
               </p>
             </div>
 
-            {/* Avatar — tapping opens the account menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground active:opacity-80"
-                  aria-label={t.home.accountMenu}
-                >
-                  {initial}
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-52">
-                <DropdownMenuLabel className="text-xs font-normal text-muted-foreground truncate">
-                  {user?.email}
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-
-                {/* Font picker submenu */}
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>Fonte</DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent>
-                    <DropdownMenuRadioGroup
-                      value={fontId}
-                      onValueChange={(id) => { void handleFontChange(id) }}
-                    >
-                      {FONT_OPTIONS.map((font) => (
-                        <DropdownMenuRadioItem key={font.id} value={font.id}>
-                          {font.label}
-                        </DropdownMenuRadioItem>
-                      ))}
-                    </DropdownMenuRadioGroup>
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
-
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={logout}>
-                  {t.home.signOut}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Avatar — tapping navigates to the Account page */}
+            <button
+              type="button"
+              onClick={() => navigate('/account')}
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground active:opacity-80"
+              aria-label={t.home.accountMenu}
+            >
+              {initial}
+            </button>
           </header>
 
           {/* ── Milestone banner (conditional) ─────────────────────────── */}

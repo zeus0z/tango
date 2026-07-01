@@ -245,6 +245,14 @@ Every feature folder ships a barrel `src/features/<name>/index.ts` exposing only
 - Use `sonner` for toasts (not Radix toast). It's already wired by F7.
 - Library docs: use the **`context7` MCP** (`mcp__context7__resolve-library-id` → `mcp__context7__query-docs`) for any library, framework, SDK, API, or CLI — see CLAUDE.md Golden Rules.
 
+### User preference / appearance pattern (fonts, themes)
+For any device-local, non-critical user preference (Japanese font, color theme, etc.), follow the shape established by `src/lib/fonts.ts` and `src/lib/themes.ts`:
+- A dedicated `src/lib/<preference>.ts` module exporting: a typed `Option[]` constant, an `apply<X>()` function that writes CSS custom properties onto `document.documentElement.style` (no React re-render needed — the cascade handles it), `getPersisted<X>Id()` (reads `localStorage`, falls back to a `DEFAULT_<X>_ID` constant, safe to call during module init before React mounts), and `persistAndApply<X>()` (writes `localStorage` + calls `apply<X>()`).
+- Persist to **`localStorage` only** — not Supabase — unless the preference genuinely needs cross-device sync. This keeps the pattern dependency-free and instant (no network round-trip, no loading state).
+- A matching Zustand slot (`<x>Id`/`set<X>Id`) in `src/lib/store.ts`, seeded from `getPersisted<X>Id()` at store creation, plus `use<X>Id()`/`useSet<X>Id()` selector hooks.
+- A blocking inline `<script>` in `index.html`, reading the persisted id from `localStorage` and applying the same CSS custom properties **before any React code runs**, to prevent a flash of the wrong preference on load (FOUT/FOUC). This table is hand-duplicated from the `Option[]` constant and kept in sync manually — there is no automated check.
+- Both live pickers currently sit together on `src/pages/AccountPage.tsx` under one "Aparência" section.
+
 ---
 
 ## Internationalisation (i18n)

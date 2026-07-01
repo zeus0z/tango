@@ -24,6 +24,7 @@ import { create } from 'zustand'
 import type { Session } from '@supabase/supabase-js'
 import type { SessionMode } from '@/types'
 import { getPersistedFontId, DEFAULT_FONT_ID } from '@/lib/fonts'
+import { getPersistedThemeId, type ThemeId } from '@/lib/themes'
 
 // ---------------------------------------------------------------------------
 // Store shape
@@ -72,6 +73,13 @@ interface AppStore {
   /** Set the active font id. Side effects (CSS var + localStorage) are handled
    *  by the caller via persistAndApply() from src/lib/fonts.ts. */
   setFontId: (id: string) => void
+
+  // ── Color theme preference ─────────────────────────────────────────────
+  /** Currently active theme id (matches a ThemeOption.id from src/lib/themes.ts). */
+  themeId: ThemeId
+  /** Set the active theme id. Side effects (CSS vars + localStorage) are
+   *  handled by the caller via persistAndApplyTheme() from src/lib/themes.ts. */
+  setThemeId: (id: ThemeId) => void
 }
 
 // ---------------------------------------------------------------------------
@@ -101,6 +109,12 @@ export const useAppStore = create<AppStore>((set) => ({
   // on first render without needing an extra effect.
   fontId: getPersistedFontId() ?? DEFAULT_FONT_ID,
   setFontId: (id) => set({ fontId: id }),
+
+  // ── Color theme preference ─────────────────────────────────────────────
+  // Initialise from localStorage so the picker shows the right selection
+  // on first render without needing an extra effect.
+  themeId: getPersistedThemeId(),
+  setThemeId: (id) => set({ themeId: id }),
 }))
 
 // ---------------------------------------------------------------------------
@@ -141,4 +155,14 @@ export function useFontId() {
 /** Returns the font id setter (stable function reference). */
 export function useSetFontId() {
   return useAppStore((s) => s.setFontId)
+}
+
+/** Returns the current color theme preference id. */
+export function useThemeId() {
+  return useAppStore((s) => s.themeId)
+}
+
+/** Returns the theme id setter (stable function reference). */
+export function useSetThemeId() {
+  return useAppStore((s) => s.setThemeId)
 }

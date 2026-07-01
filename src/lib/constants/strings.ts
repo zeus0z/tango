@@ -68,6 +68,15 @@ export const t = {
     startSession: 'Iniciar uma sessão',
   },
 
+  // ── Account page ──────────────────────────────────────────────────────────
+  account: {
+    title: 'Conta',
+    appearanceHeading: 'Aparência',
+    themeLabel: 'Tema',
+    fontLabel: 'Fonte',
+    accountHeading: 'Conta',
+  },
+
   // ── Mastery states (for display only — do not change MasteryState type values) ──
   mastery: {
     Unseen: 'Não visto',

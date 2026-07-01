@@ -28,6 +28,7 @@ Shown after login. Displays:
 - **Milestones**: contextual banners, e.g. "You completed the vowel group!"
 - **Session mode selector**: three spaced-repetition buttons to start a session, plus a separate **Infinite Review** button
   - A small **green note** sits under the 🌱 Learn button: _"Do this daily to become fluent in Japanese."_ — daily spaced repetition is the primary path; Infinite Review is optional practice.
+- Tapping the avatar navigates to the **Account page** (see §3.5) — it is not a dropdown menu.
 
 ### Session Modes
 | Mode | Description |
@@ -36,6 +37,16 @@ Shown after login. Displays:
 | 🔁 Review Recent | Only cards introduced in the last 7 days that are due |
 | 📚 Review All | Every card due today based on full FSRS history |
 | ♾️ Infinite Review | Endless practice of all learnt cards of one script — opens a setup screen first (see §5.5). Practice-only, does **not** touch FSRS. |
+
+---
+
+## 3.5 Account Page (`/account`)
+
+Reached by tapping the avatar on Home. Full-screen settings page (not a dropdown), holding:
+- **Aparência** — theme picker (color theme, live preview via a small multi-color swatch per option) and font picker (Japanese glyph font, e.g. textbook-style Klee One). Both apply immediately, no reload.
+- **Conta** — sign out.
+
+Preference is **local to the device** (localStorage), not synced across devices — same behaviour as the font picker.
 
 ---
 
@@ -182,6 +193,14 @@ A **secondary, optional** practice mode. Unlike spaced repetition (which surface
 - **Mastery threshold (locked-in convention)**: FSRS `state === 'Review'` AND `stability >= 21` days → `Mastered`. Lower stability stays `Review`. `Learning` and `New` (Unseen) map 1:1.
 - **Mode handoff** to `/session`: React Router location state — `navigate('/session', { state: { mode } })`.
 - Milestone banner derives from `progress` grouped by `group_name` from constants (e.g. "You completed the vowel group!").
+
+### §3.5 Account Page (PER-36, retroactively includes PER-40 font picker)
+- `src/pages/AccountPage.tsx` (route `/account`): `PageTransition`-only wrapper (no `Layout`) — same pattern as `InfiniteReviewPage.tsx`, since this is a secondary screen reached via a back button, not a primary bottom-nav destination.
+- **Theme picker**: `src/lib/themes.ts` — `THEME_OPTIONS` (4 themes: `default`/"Original", `midnight`/"Meia-noite", `sakura`/"Sakura", `torii`/"Torii"), each a full set of ~20 shadcn/Tailwind CSS custom-property overrides (HSL triplets) plus a 4-hex `swatch` for the picker's 2×2 preview cluster. `applyTheme()` writes every token onto `document.documentElement.style` — no React re-render needed. `persistAndApplyTheme()` + `getPersistedThemeId()` follow the exact localStorage pattern below (key `tango-theme`). Success/danger feedback colors are intentionally **constant across all themes** so correct/wrong SRS signals stay recognizable regardless of active theme. Themes were hand-authored per-theme (not derived programmatically) from 4 Color Hunt palettes, using the lightest palette member for surfaces, the darkest for ink/foreground, and the mid-lightness/high-saturation member for `--primary`.
+- **Font picker** (PER-40, moved here from the old avatar dropdown): `src/lib/fonts.ts` — `FONT_OPTIONS`, `loadFont()` (lazy `@fontsource` import), `persistAndApply()` (sets `--font-ja`), `getPersistedFontId()` (localStorage key `tango-ja-font`).
+- Both pickers are backed by a matching Zustand slot in `src/lib/store.ts` (`fontId`/`setFontId`, `themeId`/`setThemeId`) seeded from localStorage on store creation, so the picker shows the right selection on first render.
+- **FOUT/FOUC prevention**: `index.html` has two inline `<script>` blocks that run before any React code, reading the persisted font/theme ids from localStorage and applying the CSS custom properties directly — eliminating the flash of the default font/theme on load. The theme table there is hand-duplicated from `THEME_OPTIONS` and must be kept in sync manually (no automated check).
+- Persistence is **localStorage only**, not Supabase — a deliberate PER-36 deviation from the ticket's own suggested design (which proposed a `profiles.theme_id` column), matching the precedent already set by the font picker.
 
 ### §4 Cards (PER-13)
 - `src/features/cards/` exports `CardTypeA`, `CardTypeB`, `RomajiGrid`, `AnswerFeedback` via the barrel.

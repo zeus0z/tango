@@ -37,6 +37,7 @@ const HomePage = lazyWithRetry(() => import('@/pages/HomePage'))
 const SessionPage = lazyWithRetry(() => import('@/pages/SessionPage'))
 const InfiniteReviewPage = lazyWithRetry(() => import('@/pages/InfiniteReviewPage'))
 const ProgressPage = lazyWithRetry(() => import('@/pages/ProgressPage'))
+const AccountPage = lazyWithRetry(() => import('@/pages/AccountPage'))
 
 // ---------------------------------------------------------------------------
 // Route-level error element — shown when React Router catches an error
@@ -217,6 +218,15 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<PageLoader />}>
             <ProgressPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: '/account',
+        errorElement: <RouteErrorPage />,
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <AccountPage />
           </Suspense>
         ),
       },
