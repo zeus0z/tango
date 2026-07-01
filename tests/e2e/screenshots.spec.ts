@@ -71,9 +71,9 @@ test.describe('@screenshot infinite-review', () => {
 
     // Pick hiragana, start, capture the looping session
     await authedPage.getByRole('button', { name: /Hiragana/ }).click()
-    await authedPage.getByRole('button', { name: /Start practising/ }).click()
+    await authedPage.getByRole('button', { name: /Começar a praticar/ }).click()
     await authedPage.waitForLoadState('networkidle')
-    await authedPage.getByText('Exit').waitFor()
+    await authedPage.getByText(/Sair/).waitFor()
     await authedPage.screenshot({
       path: `screenshots/infinite-review-session-${project}.png`,
       fullPage: true,
@@ -102,11 +102,11 @@ test.describe('@screenshot learn-mnemonic', () => {
     await authedPage.waitForLoadState('networkidle')
 
     // Start a Learn session (navigates to /session via location state).
-    await authedPage.getByRole('button', { name: /^Learn/ }).click()
+    await authedPage.getByRole('button', { name: /^Aprender/ }).click()
     await authedPage.waitForLoadState('networkidle')
 
-    // The intro screen renders the Memory hook block by default.
-    await authedPage.getByText('Memory hook').waitFor()
+    // The intro screen renders the "Como lembrar" block by default.
+    await authedPage.getByText(/Como lembrar/).waitFor()
     await authedPage.screenshot({
       path: `screenshots/learn-mnemonic-${testInfo.project.name}.png`,
       fullPage: true,
@@ -126,15 +126,15 @@ test.describe('@screenshot learn-drill-feedback', () => {
   test('capture learn drill wrong-answer feedback + Next button', async ({ authedPage }, testInfo) => {
     await authedPage.goto('/home')
     await authedPage.waitForLoadState('networkidle')
-    await authedPage.getByRole('button', { name: /^Learn/ }).click()
+    await authedPage.getByRole('button', { name: /^Aprender/ }).click()
     await authedPage.waitForLoadState('networkidle')
 
     // Intro screen for あ → drill (Type A: symbol → sound)
-    await authedPage.getByRole('button', { name: /Got it/ }).click()
+    await authedPage.getByRole('button', { name: /Entendido/ }).click()
     await authedPage.locator('p.font-ja.text-8xl').click() // reveal romaji grid
     await authedPage.getByRole('button', { name: 'ka', exact: true }).click() // wrong (correct is 'a')
 
-    await authedPage.getByRole('button', { name: /Next/ }).waitFor()
+    await authedPage.getByRole('button', { name: /Próximo/ }).waitFor()
     await authedPage.screenshot({
       path: `screenshots/learn-drill-feedback-${testInfo.project.name}.png`,
       fullPage: true,
@@ -164,7 +164,7 @@ test.describe('@screenshot review-drill-feedback', () => {
   test('capture review wrong-answer feedback + Next button', async ({ authedPage }, testInfo) => {
     await authedPage.goto('/home')
     await authedPage.waitForLoadState('networkidle')
-    await authedPage.getByRole('button', { name: /Review All/ }).click()
+    await authedPage.getByRole('button', { name: /Revisar tudo/ }).click()
     await authedPage.waitForLoadState('networkidle')
 
     await authedPage.locator('p.text-4xl.font-bold').first().click() // reveal 6 tiles
@@ -177,7 +177,7 @@ test.describe('@screenshot review-drill-feedback', () => {
       }
     }
 
-    await authedPage.getByRole('button', { name: /Next/ }).waitFor()
+    await authedPage.getByRole('button', { name: /Próximo/ }).waitFor()
     await authedPage.screenshot({
       path: `screenshots/review-drill-feedback-${testInfo.project.name}.png`,
       fullPage: true,
@@ -198,7 +198,7 @@ test.describe('@screenshot font-picker', () => {
     await authedPage.waitForLoadState('networkidle')
 
     // Open the avatar dropdown
-    await authedPage.getByRole('button', { name: /Account menu/ }).click()
+    await authedPage.getByRole('button', { name: /Menu da conta/ }).click()
     // Hover the Fonte sub-trigger to open the submenu
     await authedPage.getByText('Fonte').hover()
     await authedPage.waitForTimeout(300) // allow submenu animation

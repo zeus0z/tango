@@ -12,6 +12,7 @@ import { supabase } from '@/lib/supabase'
 import { reportError } from '@/lib/errorReporter'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { t } from '@/lib/constants/strings'
 
 // ---------------------------------------------------------------------------
 // Lazy page imports — each page must be a default export.
@@ -51,13 +52,13 @@ function RouteErrorPage() {
 
   const title = isRouteErrorResponse(error)
     ? `${error.status} ${error.statusText}`
-    : 'Something went wrong'
+    : t.errors.somethingWentWrong
 
   const description = is404
-    ? "The page you were looking for doesn't exist."
+    ? t.errors.unexpectedError
     : isChunkError
-    ? 'The app was updated. Reload to get the latest version.'
-    : 'An unexpected error occurred. Try refreshing the page.'
+    ? t.errors.appUpdated
+    : t.errors.tryRefreshing
 
   // Report unexpected errors (not 404s or deliberate chunk reloads) to the
   // external error service configured in errorReporter.ts.
@@ -76,7 +77,7 @@ function RouteErrorPage() {
         </CardHeader>
         <CardContent>
           <Button className="w-full" onClick={() => window.location.reload()}>
-            Reload
+            {t.errors.reload}
           </Button>
         </CardContent>
       </Card>
@@ -91,7 +92,7 @@ function RouteErrorPage() {
 function PageLoader() {
   return (
     <div className="flex min-h-svh items-center justify-center">
-      <span className="text-muted-foreground text-sm">Loading…</span>
+      <span className="text-muted-foreground text-sm">{t.common.loading}</span>
     </div>
   )
 }

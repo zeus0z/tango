@@ -21,6 +21,7 @@ import {
 import type { MasteryState } from '@/types'
 import type { ProgressRow } from '../services/progress.service'
 import { cn } from '@/lib/utils'
+import { t } from '@/lib/constants/strings'
 
 // ---------------------------------------------------------------------------
 // Props
@@ -54,15 +55,15 @@ function formatRelativeDate(isoDate: string): string {
   const diffMs = due - now
   const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24))
 
-  if (diffDays === 0) return 'Today'
-  if (diffDays === 1) return 'Tomorrow'
-  if (diffDays === -1) return 'Yesterday (overdue)'
-  if (diffDays < 0) return `${Math.abs(diffDays)} days overdue`
-  if (diffDays < 7) return `In ${diffDays} days`
-  if (diffDays < 14) return 'In 1 week'
-  if (diffDays < 30) return `In ${Math.round(diffDays / 7)} weeks`
-  if (diffDays < 365) return `In ${Math.round(diffDays / 30)} months`
-  return `In ${Math.round(diffDays / 365)} years`
+  if (diffDays === 0) return t.characterDetail.today
+  if (diffDays === 1) return t.characterDetail.tomorrow
+  if (diffDays === -1) return t.characterDetail.yesterday
+  if (diffDays < 0) return t.characterDetail.daysOverdue(Math.abs(diffDays))
+  if (diffDays < 7) return t.characterDetail.inDays(diffDays)
+  if (diffDays < 14) return t.characterDetail.inOneWeek
+  if (diffDays < 30) return t.characterDetail.inWeeks(Math.round(diffDays / 7))
+  if (diffDays < 365) return t.characterDetail.inMonths(Math.round(diffDays / 30))
+  return t.characterDetail.inYears(Math.round(diffDays / 365))
 }
 
 function formatAccuracy(correct: number, total: number): string {
@@ -102,7 +103,7 @@ export function CharacterDetailDialog({
               <span
                 lang="ja"
                 className="font-ja text-8xl font-bold leading-none"
-                aria-label={`Character: ${character}`}
+                aria-label={t.characterDetail.characterAriaLabel(character)}
               >
                 {character}
               </span>
@@ -126,14 +127,14 @@ export function CharacterDetailDialog({
 
               {/* Mastery pill */}
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-foreground">Mastery</span>
+                <span className="text-sm font-medium text-foreground">{t.characterDetail.masteryLabel}</span>
                 <span
                   className={cn(
                     'rounded-full px-2.5 py-0.5 text-xs font-semibold',
                     MASTERY_PILL[mastery],
                   )}
                 >
-                  {mastery}
+                  {t.mastery[mastery]}
                 </span>
               </div>
 
@@ -141,7 +142,7 @@ export function CharacterDetailDialog({
                 <>
                   {/* Next review */}
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Next review</span>
+                    <span className="text-muted-foreground">{t.characterDetail.nextReview}</span>
                     <span className="font-medium text-foreground">
                       {formatRelativeDate(progressRow.due)}
                     </span>
@@ -151,21 +152,21 @@ export function CharacterDetailDialog({
                   <div className="grid grid-cols-3 gap-2 rounded-xl bg-muted/50 p-3 text-center">
                     <div>
                       <p className="text-lg font-bold text-foreground">{progressRow.reps}</p>
-                      <p className="text-xs text-muted-foreground">Reviews</p>
+                      <p className="text-xs text-muted-foreground">{t.characterDetail.reviews}</p>
                     </div>
                     <div>
                       <p className="text-lg font-bold text-foreground">{progressRow.lapses}</p>
-                      <p className="text-xs text-muted-foreground">Lapses</p>
+                      <p className="text-xs text-muted-foreground">{t.characterDetail.lapses}</p>
                     </div>
                     <div>
                       <p className="text-lg font-bold text-foreground">{accuracy}</p>
-                      <p className="text-xs text-muted-foreground">Accuracy</p>
+                      <p className="text-xs text-muted-foreground">{t.characterDetail.accuracy}</p>
                     </div>
                   </div>
 
                   {/* Stability */}
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Stability</span>
+                    <span className="text-muted-foreground">{t.characterDetail.stability}</span>
                     <span className="font-medium text-foreground">
                       {progressRow.stability.toFixed(1)}d
                     </span>
@@ -173,7 +174,7 @@ export function CharacterDetailDialog({
                 </>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  You haven't studied this character yet. It will appear once introduced in a session.
+                  {t.characterDetail.notStudiedYet}
                 </p>
               )}
             </div>

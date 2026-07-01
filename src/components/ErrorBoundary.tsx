@@ -2,6 +2,7 @@ import { Component, type ErrorInfo, type ReactNode } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { reportError } from '@/lib/errorReporter'
+import { t } from '@/lib/constants/strings'
 
 interface ErrorBoundaryProps {
   children: ReactNode
@@ -41,14 +42,14 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
         <div className="flex min-h-svh items-center justify-center p-4">
           <Card className="w-full max-w-sm text-center">
             <CardHeader>
-              <CardTitle className="text-lg">Something went wrong</CardTitle>
+              <CardTitle className="text-lg">{t.errors.somethingWentWrong}</CardTitle>
               <CardDescription>
-                {this.state.error?.message ?? 'An unexpected error occurred.'}
+                {this.state.error?.message ?? t.errors.unexpectedError}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Button onClick={this.handleReset} className="w-full">
-                Try again
+                {t.errors.tryAgain}
               </Button>
             </CardContent>
           </Card>

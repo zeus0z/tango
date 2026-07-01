@@ -22,6 +22,7 @@ import { DIACRITICS } from '@/lib/constants/diacritics'
 import { MnemonicViewer } from '@/features/cards/components/MnemonicViewer'
 import { speakHiragana } from '@/features/cards/utils/speak'
 import { cn } from '@/lib/utils'
+import { t } from '@/lib/constants/strings'
 
 // ---------------------------------------------------------------------------
 // Props
@@ -76,7 +77,7 @@ export function IntroduceCharacter({ card, derived, onAdvance }: IntroduceCharac
         className="w-full min-h-[56px] text-base font-bold rounded-2xl"
         onClick={onAdvance}
       >
-        Got it →
+        {t.introduce.gotIt}
       </Button>
     </motion.div>
   )
@@ -131,7 +132,7 @@ function SoloIntro({ card }: { card: Card }) {
             className="flex flex-col justify-center px-5 py-5 md:flex-1"
           >
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-              Como lembrar:
+              {t.introduce.memoryHook}:
             </p>
             <MnemonicViewer
               mnemonics={card.mnemonics_pt!}
@@ -199,7 +200,7 @@ function PairIntro({ card, derived }: { card: Card; derived: Card }) {
               className="px-5 py-4 flex flex-col gap-2"
             >
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Como lembrar: {card.romaji}
+                {t.introduce.memoryHookWithRomaji(card.romaji)}
               </p>
               <MnemonicViewer
                 mnemonics={card.mnemonics_pt!}
@@ -275,7 +276,7 @@ function SpeakerButton({ character }: { character: string }) {
   return (
     <button
       type="button"
-      aria-label="Play pronunciation"
+      aria-label={t.common.playPronunciation}
       onClick={(e) => {
         e.stopPropagation()
         speakHiragana(character)

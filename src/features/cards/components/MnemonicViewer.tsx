@@ -14,6 +14,7 @@ import { useState, type ComponentProps } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { t } from '@/lib/constants/strings'
 
 interface MnemonicViewerProps {
   /** The memory hooks for this card; the first entry is the primary/default. */
@@ -80,7 +81,7 @@ export function MnemonicViewer({ mnemonics, keywords, textClassName, className }
       {count > 1 && (
         <div className="flex items-center gap-3">
           <NavButton
-            aria-label="Mnemônico anterior"
+            aria-label={t.mnemonic.prevAriaLabel}
             onClick={(e) => {
               e.stopPropagation()
               go(-1)
@@ -92,7 +93,7 @@ export function MnemonicViewer({ mnemonics, keywords, textClassName, className }
             {current + 1} / {count}
           </span>
           <NavButton
-            aria-label="Próximo mnemônico"
+            aria-label={t.mnemonic.nextAriaLabel}
             onClick={(e) => {
               e.stopPropagation()
               go(1)

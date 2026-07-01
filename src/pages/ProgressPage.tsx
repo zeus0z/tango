@@ -26,6 +26,7 @@ import {
   ResetProgressSection,
 } from '@/features/progress'
 import type { MasteryState } from '@/types'
+import { t } from '@/lib/constants/strings'
 
 // ---------------------------------------------------------------------------
 // Section header helper
@@ -69,18 +70,18 @@ export default function ProgressPage() {
         <div className="flex flex-1 flex-col gap-6 px-4 py-6 pb-safe">
           {/* Page title */}
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Progress</h1>
+            <h1 className="text-2xl font-bold text-foreground">{t.progress.title}</h1>
             <p className="text-sm text-muted-foreground mt-0.5">
-              Your hiragana mastery at a glance
+              {t.progress.subtitle}
             </p>
           </div>
 
           {/* ── Section 1: Alphabet map ─────────────────────────────────── */}
           <section className="flex flex-col gap-3">
-            <SectionHeader title="Hiragana map" />
+            <SectionHeader title={t.progress.hiraganaMap} />
             {mapLoading ? (
               <div className="flex justify-center py-8">
-                <span className="text-sm text-muted-foreground">Loading map…</span>
+                <span className="text-sm text-muted-foreground">{t.progress.loadingMap}</span>
               </div>
             ) : (
               <AlphabetProgressMap
@@ -103,7 +104,7 @@ export default function ProgressPage() {
                   return (
                     <div key={state} className="flex items-center gap-1.5">
                       <div className={`h-3 w-3 rounded-sm ${colours[state]}`} />
-                      <span className="text-xs text-muted-foreground">{state}</span>
+                      <span className="text-xs text-muted-foreground">{t.mastery[state]}</span>
                     </div>
                   )
                 })}
@@ -113,14 +114,14 @@ export default function ProgressPage() {
 
           {/* ── Section 2: Study history heatmap ───────────────────────── */}
           <section className="flex flex-col gap-3">
-            <SectionHeader title="Study history" />
+            <SectionHeader title={t.progress.studyHistory} />
             {historyLoading ? (
               <div className="flex justify-center py-6">
-                <span className="text-sm text-muted-foreground">Loading history…</span>
+                <span className="text-sm text-muted-foreground">{t.progress.loadingHistory}</span>
               </div>
             ) : !history || history.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-6">
-                No review history yet. Complete a study session to see your activity here.
+                {t.progress.noHistory}
               </p>
             ) : (
               <div className="overflow-x-auto">
@@ -131,13 +132,13 @@ export default function ProgressPage() {
 
           {/* ── Section 3: Weak cards ───────────────────────────────────── */}
           <section className="flex flex-col gap-3">
-            <SectionHeader title="Weak cards" />
+            <SectionHeader title={t.progress.weakCards} />
             <p className="text-xs text-muted-foreground -mt-1">
-              Characters with the lowest accuracy (min. 3 reviews)
+              {t.progress.weakCardsDescription}
             </p>
             {weakLoading ? (
               <div className="flex justify-center py-6">
-                <span className="text-sm text-muted-foreground">Loading…</span>
+                <span className="text-sm text-muted-foreground">{t.progress.loading}</span>
               </div>
             ) : (
               <WeakCardsList

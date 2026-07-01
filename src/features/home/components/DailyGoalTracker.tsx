@@ -10,6 +10,7 @@
  */
 
 import { Progress } from '@/components/ui/progress'
+import { t } from '@/lib/constants/strings'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -47,7 +48,7 @@ export function DailyGoalTracker({ learnedToday, isLoading = false }: DailyGoalT
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-foreground">
-          Daily goal
+          {t.home.dailyGoalLabel}
         </p>
         <span
           className={
@@ -63,12 +64,12 @@ export function DailyGoalTracker({ learnedToday, isLoading = false }: DailyGoalT
       <Progress
         value={pct}
         className="h-2"
-        aria-label={`${learnedToday} of ${DAILY_GOAL} cards learned today`}
+        aria-label={t.home.dailyGoalAriaLabel(learnedToday, DAILY_GOAL)}
       />
 
       {isGoalMet && (
         <p className="text-xs text-green-600 font-medium">
-          Goal reached! Keep going to reinforce your memory.
+          {t.home.goalReached}
         </p>
       )}
     </div>

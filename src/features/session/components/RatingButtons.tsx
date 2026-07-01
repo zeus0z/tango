@@ -7,6 +7,7 @@
 
 import type { UIRating } from '@/lib/fsrs'
 import { cn } from '@/lib/utils'
+import { t } from '@/lib/constants/strings'
 
 interface RatingButtonsProps {
   onRate: (rating: UIRating) => void
@@ -28,7 +29,7 @@ export function RatingButtons({ onRate, disabled = false }: RatingButtonsProps) 
           'disabled:opacity-50 disabled:pointer-events-none',
         )}
       >
-        Hard
+        {t.rating.hard}
       </button>
 
       {/* Good */}
@@ -43,7 +44,7 @@ export function RatingButtons({ onRate, disabled = false }: RatingButtonsProps) 
           'disabled:opacity-50 disabled:pointer-events-none',
         )}
       >
-        Good
+        {t.rating.good}
       </button>
 
       {/* Easy */}
@@ -58,7 +59,7 @@ export function RatingButtons({ onRate, disabled = false }: RatingButtonsProps) 
           'disabled:opacity-50 disabled:pointer-events-none',
         )}
       >
-        Easy
+        {t.rating.easy}
       </button>
     </div>
   )

@@ -12,6 +12,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { useResetProgress } from '../hooks/useResetProgress'
+import { t } from '@/lib/constants/strings'
 
 interface ResetProgressSectionProps {
   userId: string | undefined
@@ -25,10 +26,10 @@ export function ResetProgressSection({ userId }: ResetProgressSectionProps) {
   async function handleConfirm() {
     try {
       await reset.mutateAsync()
-      toast.success('All progress reset. Your account is fresh.')
+      toast.success(t.resetProgress.successToast)
       setOpen(false)
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Reset failed. Please try again.'
+      const message = err instanceof Error ? err.message : t.resetProgress.errorToast
       toast.error(message)
     }
   }
@@ -38,9 +39,9 @@ export function ResetProgressSection({ userId }: ResetProgressSectionProps) {
       <div className="flex items-start gap-3">
         <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
         <div className="flex flex-col gap-1">
-          <h2 className="text-base font-semibold text-foreground">Reset all progress</h2>
+          <h2 className="text-base font-semibold text-foreground">{t.resetProgress.sectionTitle}</h2>
           <p className="text-sm text-muted-foreground">
-            Delete every review and start over as if this account were brand new. This cannot be undone.
+            {t.resetProgress.sectionDescription}
           </p>
         </div>
       </div>
@@ -52,7 +53,7 @@ export function ResetProgressSection({ userId }: ResetProgressSectionProps) {
         disabled={disabled}
         onClick={() => setOpen(true)}
       >
-        Reset all progress
+        {t.resetProgress.buttonLabel}
       </Button>
 
       <Dialog
@@ -64,11 +65,9 @@ export function ResetProgressSection({ userId }: ResetProgressSectionProps) {
       >
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Reset all progress?</DialogTitle>
+            <DialogTitle>{t.resetProgress.dialogTitle}</DialogTitle>
             <DialogDescription>
-              This permanently deletes every review you've done and every FSRS card state for your
-              account. Your hiragana map will go grey and every character will need to be learned again.
-              This action cannot be undone.
+              {t.resetProgress.dialogDescription}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-2">
@@ -78,7 +77,7 @@ export function ResetProgressSection({ userId }: ResetProgressSectionProps) {
               disabled={reset.isPending}
               onClick={() => setOpen(false)}
             >
-              Cancel
+              {t.resetProgress.cancel}
             </Button>
             <Button
               variant="destructive"
@@ -86,7 +85,7 @@ export function ResetProgressSection({ userId }: ResetProgressSectionProps) {
               disabled={reset.isPending}
               onClick={handleConfirm}
             >
-              {reset.isPending ? 'Resetting…' : 'Reset everything'}
+              {reset.isPending ? t.resetProgress.resetting : t.resetProgress.resetEverything}
             </Button>
           </DialogFooter>
         </DialogContent>

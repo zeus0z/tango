@@ -22,6 +22,7 @@
 import { HIRAGANA } from '@/lib/constants/hiragana'
 import type { MasteryState } from '@/types'
 import { cn } from '@/lib/utils'
+import { t } from '@/lib/constants/strings'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -72,7 +73,7 @@ export function AlphabetProgressMap({
   return (
     <div
       role="grid"
-      aria-label="Hiragana alphabet progress map"
+      aria-label={t.alphabet.progressMapAriaLabel}
       className="flex flex-wrap justify-center gap-1.5"
     >
       {HIRAGANA.map(({ character, romaji }) => {
@@ -84,7 +85,7 @@ export function AlphabetProgressMap({
             key={character}
             type="button"
             role="gridcell"
-            aria-label={`${character} (${romaji}) — ${mastery}`}
+            aria-label={t.alphabet.cellAriaLabel(character, romaji, t.mastery[mastery])}
             disabled={!isInteractive}
             onClick={isInteractive ? () => onCellPress(character) : undefined}
             className={cn(

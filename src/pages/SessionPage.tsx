@@ -22,6 +22,7 @@ import {
   useTeachingPlanQuery,
   useInfiniteReviewQueue,
 } from '@/features/session/hooks/useSessionQueue'
+import { t } from '@/lib/constants/strings'
 import { SessionCardView, InfiniteReviewSessionView } from '@/features/session'
 
 export default function SessionPage() {
@@ -102,7 +103,7 @@ export default function SessionPage() {
     return (
       <PageTransition>
         <div className="flex min-h-svh items-center justify-center">
-          <p className="text-muted-foreground text-sm">Loading session…</p>
+          <p className="text-muted-foreground text-sm">{t.session.loadingSession}</p>
         </div>
       </PageTransition>
     )
@@ -112,7 +113,7 @@ export default function SessionPage() {
     return (
       <PageTransition>
         <div className="flex min-h-svh items-center justify-center">
-          <p className="text-muted-foreground text-sm">Building your session…</p>
+          <p className="text-muted-foreground text-sm">{t.session.buildingSession}</p>
         </div>
       </PageTransition>
     )
@@ -126,14 +127,14 @@ export default function SessionPage() {
       <PageTransition>
         <div className="flex min-h-svh flex-col items-center justify-center gap-4 px-6">
           <p className="text-destructive text-sm text-center">
-            Failed to load session: {error?.message ?? 'Unknown error'}
+            {t.session.failedToLoad(error?.message ?? t.session.unknownError)}
           </p>
           <button
             type="button"
             onClick={() => navigate('/home')}
             className="min-h-[48px] px-6 rounded-xl bg-primary text-primary-foreground font-semibold active:scale-95 transition-transform duration-75"
           >
-            Go Home
+            {t.common.goHome}
           </button>
         </div>
       </PageTransition>
@@ -156,20 +157,20 @@ export default function SessionPage() {
           <p className="text-2xl">🌟</p>
           <h1 className="text-xl font-bold text-foreground text-center">
             {isInfiniteMode
-              ? `You haven't learnt any ${script} yet!`
-              : 'Nothing to review right now!'}
+              ? t.session.emptyInfiniteTitle(script)
+              : t.session.emptyReviewTitle}
           </h1>
           <p className="text-muted-foreground text-sm text-center">
             {isInfiniteMode
-              ? 'Go learn some cards first, then come back to practice.'
-              : 'Come back later or try a different session mode.'}
+              ? t.session.emptyInfiniteHint
+              : t.session.emptyReviewHint}
           </p>
           <button
             type="button"
             onClick={() => navigate('/home')}
             className="w-full min-h-[56px] rounded-2xl bg-primary text-primary-foreground font-bold text-base active:scale-95 transition-transform duration-75 shadow-sm"
           >
-            Return Home
+            {t.common.returnHome}
           </button>
         </div>
       </PageTransition>
