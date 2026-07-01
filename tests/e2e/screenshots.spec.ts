@@ -15,6 +15,7 @@ const ROUTES: Array<{ name: string; path: string }> = [
   { name: 'home', path: '/home' },
   { name: 'progress', path: '/progress' },
   { name: 'session', path: '/session' },
+  { name: 'account', path: '/account' },
 ]
 
 test.describe('@screenshot', () => {
@@ -186,34 +187,50 @@ test.describe('@screenshot review-drill-feedback', () => {
 })
 
 /**
- * Font picker (PER-40). Opens the avatar dropdown on /home, then opens the
- * "Fonte" submenu to show all 4 font options. Also captures the home screen
- * with Klee One applied so the kana characters render in textbook style.
+ * Account page (PER-36) — replaces the old avatar dropdown. Tapping the
+ * avatar on /home now navigates straight to /account, which holds the theme
+ * picker, font picker (PER-40, moved here), and sign out. Captures the page
+ * itself, then applied Klee One font and two applied themes (Meia-noite,
+ * Sakura) per PER-36's acceptance criteria.
  */
-test.describe('@screenshot font-picker', () => {
-  test('capture font picker submenu + applied font', async ({ authedPage }, testInfo) => {
+test.describe('@screenshot account-page', () => {
+  test('capture account page, applied font, and two applied themes', async ({ authedPage }, testInfo) => {
     const project = testInfo.project.name
 
     await authedPage.goto('/home')
     await authedPage.waitForLoadState('networkidle')
 
-    // Open the avatar dropdown
+    // Avatar now navigates directly to /account (no dropdown)
     await authedPage.getByRole('button', { name: /Menu da conta/ }).click()
-    // Hover the Fonte sub-trigger to open the submenu
-    await authedPage.getByText('Fonte').hover()
-    await authedPage.waitForTimeout(300) // allow submenu animation
+    await authedPage.waitForLoadState('networkidle')
+    await authedPage.getByText('Aparência').waitFor()
 
     await authedPage.screenshot({
-      path: `screenshots/font-picker-${project}.png`,
-      fullPage: false,
+      path: `screenshots/account-page-${project}.png`,
+      fullPage: true,
     })
 
     // Select "Livro didático" (Klee One) and capture the result
-    await authedPage.getByRole('menuitemradio', { name: 'Livro didático' }).click()
+    await authedPage.getByRole('button', { name: 'Livro didático' }).click()
     await authedPage.waitForLoadState('networkidle')
-
     await authedPage.screenshot({
       path: `screenshots/font-klee-one-${project}.png`,
+      fullPage: true,
+    })
+
+    // Select the Meia-noite theme and capture the applied result
+    await authedPage.getByRole('button', { name: 'Meia-noite' }).click()
+    await authedPage.waitForTimeout(150) // CSS var swap, no navigation/animation to wait on
+    await authedPage.screenshot({
+      path: `screenshots/theme-midnight-${project}.png`,
+      fullPage: true,
+    })
+
+    // Select the Sakura theme and capture the applied result
+    await authedPage.getByRole('button', { name: 'Sakura' }).click()
+    await authedPage.waitForTimeout(150)
+    await authedPage.screenshot({
+      path: `screenshots/theme-sakura-${project}.png`,
       fullPage: true,
     })
   })
