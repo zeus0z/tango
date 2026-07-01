@@ -16,7 +16,8 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "screenshots": "playwright test --grep @screenshot",
-    "seed": "supabase db reset"
+    "seed": "supabase db reset",
+    "generate:audio": "node scripts/generate-kana-audio.mjs"
   },
   "dependencies": {
     "@fontsource/klee-one": "^5.2.8",
