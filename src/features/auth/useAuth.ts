@@ -33,9 +33,8 @@ import { signOut as authSignOut } from './authService'
  * (e.g. AppAuthProvider). It subscribes to supabase.auth.onAuthStateChange and
  * syncs the Zustand store on every auth event.
  *
- * Uses only onAuthStateChange (not getSession first) to avoid the race
- * condition on Google OAuth redirect — see ProtectedRoute in router.tsx for
- * the full explanation.
+ * Uses only onAuthStateChange (not getSession first) — see ProtectedRoute in
+ * router.tsx for the full explanation.
  */
 export function useAuthListener() {
   const setAuthSession = useSetAuthSession()
