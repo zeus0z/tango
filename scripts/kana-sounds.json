@@ -1,0 +1,130 @@
+[
+  { "id": "a", "text": "あ", "script": "kana" },
+  { "id": "i", "text": "い", "script": "kana" },
+  { "id": "u", "text": "う", "script": "kana" },
+  { "id": "e", "text": "え", "script": "kana" },
+  { "id": "o", "text": "お", "script": "kana" },
+
+  { "id": "ka", "text": "か", "script": "kana" },
+  { "id": "ki", "text": "き", "script": "kana" },
+  { "id": "ku", "text": "く", "script": "kana" },
+  { "id": "ke", "text": "け", "script": "kana" },
+  { "id": "ko", "text": "こ", "script": "kana" },
+
+  { "id": "sa", "text": "さ", "script": "kana" },
+  { "id": "shi", "text": "し", "script": "kana" },
+  { "id": "su", "text": "す", "script": "kana" },
+  { "id": "se", "text": "せ", "script": "kana" },
+  { "id": "so", "text": "そ", "script": "kana" },
+
+  { "id": "ta", "text": "た", "script": "kana" },
+  { "id": "chi", "text": "ち", "script": "kana" },
+  { "id": "tsu", "text": "つ", "script": "kana" },
+  { "id": "te", "text": "て", "script": "kana" },
+  { "id": "to", "text": "と", "script": "kana" },
+
+  { "id": "na", "text": "な", "script": "kana" },
+  { "id": "ni", "text": "に", "script": "kana" },
+  { "id": "nu", "text": "ぬ", "script": "kana" },
+  { "id": "ne", "text": "ね", "script": "kana" },
+  { "id": "no", "text": "の", "script": "kana" },
+
+  { "id": "ha", "text": "は", "script": "kana" },
+  { "id": "hi", "text": "ひ", "script": "kana" },
+  { "id": "fu", "text": "ふ", "script": "kana" },
+  { "id": "he", "text": "へ", "script": "kana" },
+  { "id": "ho", "text": "ほ", "script": "kana" },
+
+  { "id": "ma", "text": "ま", "script": "kana" },
+  { "id": "mi", "text": "み", "script": "kana" },
+  { "id": "mu", "text": "む", "script": "kana" },
+  { "id": "me", "text": "め", "script": "kana" },
+  { "id": "mo", "text": "も", "script": "kana" },
+
+  { "id": "ya", "text": "や", "script": "kana" },
+  { "id": "yu", "text": "ゆ", "script": "kana" },
+  { "id": "yo", "text": "よ", "script": "kana" },
+
+  { "id": "ra", "text": "ら", "script": "kana" },
+  { "id": "ri", "text": "り", "script": "kana" },
+  { "id": "ru", "text": "る", "script": "kana" },
+  { "id": "re", "text": "れ", "script": "kana" },
+  { "id": "ro", "text": "ろ", "script": "kana" },
+
+  { "id": "wa", "text": "わ", "script": "kana" },
+  { "id": "wo", "text": "を", "script": "kana" },
+
+  { "id": "n", "text": "ん", "script": "kana" },
+
+  { "id": "ga", "text": "が", "script": "kana" },
+  { "id": "gi", "text": "ぎ", "script": "kana" },
+  { "id": "gu", "text": "ぐ", "script": "kana" },
+  { "id": "ge", "text": "げ", "script": "kana" },
+  { "id": "go", "text": "ご", "script": "kana" },
+
+  { "id": "za", "text": "ざ", "script": "kana" },
+  { "id": "ji", "text": "じ", "script": "kana" },
+  { "id": "zu", "text": "ず", "script": "kana" },
+  { "id": "ze", "text": "ぜ", "script": "kana" },
+  { "id": "zo", "text": "ぞ", "script": "kana" },
+
+  { "id": "da", "text": "だ", "script": "kana" },
+  { "id": "de", "text": "で", "script": "kana" },
+  { "id": "do", "text": "ど", "script": "kana" },
+
+  { "id": "ba", "text": "ば", "script": "kana" },
+  { "id": "bi", "text": "び", "script": "kana" },
+  { "id": "bu", "text": "ぶ", "script": "kana" },
+  { "id": "be", "text": "べ", "script": "kana" },
+  { "id": "bo", "text": "ぼ", "script": "kana" },
+
+  { "id": "pa", "text": "ぱ", "script": "kana" },
+  { "id": "pi", "text": "ぴ", "script": "kana" },
+  { "id": "pu", "text": "ぷ", "script": "kana" },
+  { "id": "pe", "text": "ぺ", "script": "kana" },
+  { "id": "po", "text": "ぽ", "script": "kana" },
+
+  { "id": "kya", "text": "きゃ", "script": "kana" },
+  { "id": "kyu", "text": "きゅ", "script": "kana" },
+  { "id": "kyo", "text": "きょ", "script": "kana" },
+
+  { "id": "sha", "text": "しゃ", "script": "kana" },
+  { "id": "shu", "text": "しゅ", "script": "kana" },
+  { "id": "sho", "text": "しょ", "script": "kana" },
+
+  { "id": "cha", "text": "ちゃ", "script": "kana" },
+  { "id": "chu", "text": "ちゅ", "script": "kana" },
+  { "id": "cho", "text": "ちょ", "script": "kana" },
+
+  { "id": "nya", "text": "にゃ", "script": "kana" },
+  { "id": "nyu", "text": "にゅ", "script": "kana" },
+  { "id": "nyo", "text": "にょ", "script": "kana" },
+
+  { "id": "hya", "text": "ひゃ", "script": "kana" },
+  { "id": "hyu", "text": "ひゅ", "script": "kana" },
+  { "id": "hyo", "text": "ひょ", "script": "kana" },
+
+  { "id": "mya", "text": "みゃ", "script": "kana" },
+  { "id": "myu", "text": "みゅ", "script": "kana" },
+  { "id": "myo", "text": "みょ", "script": "kana" },
+
+  { "id": "rya", "text": "りゃ", "script": "kana" },
+  { "id": "ryu", "text": "りゅ", "script": "kana" },
+  { "id": "ryo", "text": "りょ", "script": "kana" },
+
+  { "id": "gya", "text": "ぎゃ", "script": "kana" },
+  { "id": "gyu", "text": "ぎゅ", "script": "kana" },
+  { "id": "gyo", "text": "ぎょ", "script": "kana" },
+
+  { "id": "ja", "text": "じゃ", "script": "kana" },
+  { "id": "ju", "text": "じゅ", "script": "kana" },
+  { "id": "jo", "text": "じょ", "script": "kana" },
+
+  { "id": "bya", "text": "びゃ", "script": "kana" },
+  { "id": "byu", "text": "びゅ", "script": "kana" },
+  { "id": "byo", "text": "びょ", "script": "kana" },
+
+  { "id": "pya", "text": "ぴゃ", "script": "kana" },
+  { "id": "pyu", "text": "ぴゅ", "script": "kana" },
+  { "id": "pyo", "text": "ぴょ", "script": "kana" }
+]

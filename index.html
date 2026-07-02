@@ -1,26 +1,115 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- ── SEO ──────────────────────────────────────────────────────────── -->
-    <title>Tango — Learn Japanese with Spaced Repetition</title>
-    <meta name="description" content="Master hiragana and katakana through smart spaced repetition, following the Genki I/II curriculum. A mobile-first PWA for Japanese learners." />
+    <title>Tango — Aprenda japonês com repetição espaçada</title>
+    <meta name="description" content="Domine hiragana e katakana com repetição espaçada inteligente, seguindo o currículo Genki I/II. Um PWA mobile-first para quem aprende japonês." />
 
     <!-- ── Open Graph ────────────────────────────────────────────────────── -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Tango — Learn Japanese with Spaced Repetition" />
-    <meta property="og:description" content="Master hiragana and katakana through smart spaced repetition, following the Genki I/II curriculum. A mobile-first PWA for Japanese learners." />
+    <meta property="og:title" content="Tango — Aprenda japonês com repetição espaçada" />
+    <meta property="og:description" content="Domine hiragana e katakana com repetição espaçada inteligente, seguindo o currículo Genki I/II. Um PWA mobile-first para quem aprende japonês." />
     <meta property="og:image" content="/pwa-512x512.png" />
     <meta property="og:url" content="https://app.tango.dev" />
 
     <!-- ── Twitter Card ───────────────────────────────────────────────────── -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Tango — Learn Japanese with Spaced Repetition" />
-    <meta name="twitter:description" content="Master hiragana and katakana through smart spaced repetition, following the Genki I/II curriculum." />
+    <meta name="twitter:title" content="Tango — Aprenda japonês com repetição espaçada" />
+    <meta name="twitter:description" content="Domine hiragana e katakana com repetição espaçada inteligente, seguindo o currículo Genki I/II." />
     <meta name="twitter:image" content="/pwa-512x512.png" />
+
+    <!-- ── Japanese font — prevent FOUT ────────────────────────────────────
+         Reads the persisted font choice from localStorage and immediately
+         sets --font-ja on <html> before any React code runs. This ensures
+         the correct font-family is in the cascade from the very first paint,
+         eliminating the flash of the default system font.                   -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('tango-ja-font');
+          var families = {
+            'noto-sans':     '"Noto Sans JP","Hiragino Sans","Yu Gothic",sans-serif',
+            'klee-one':      '"Klee One",cursive',
+            'noto-serif':    '"Noto Serif JP","Yu Mincho",serif',
+            'm-plus-rounded':'"M PLUS Rounded 1c",sans-serif'
+          };
+          if (stored && families[stored]) {
+            document.documentElement.style.setProperty('--font-ja', families[stored]);
+          }
+        } catch (e) { /* localStorage blocked — silently use CSS default */ }
+      })();
+    </script>
+
+    <!-- ── Color theme — prevent flash of wrong theme ──────────────────────
+         Reads the persisted theme choice from localStorage and immediately
+         sets every theme CSS custom property on <html> before any React code
+         runs, matching the FOUT-prevention technique above. Keep this table
+         in sync with THEME_OPTIONS in src/lib/themes.ts by hand — there is
+         no automated check (see docs/CODE_PRACTICES.md).                    -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('tango-theme');
+          var themes = {
+            midnight: {
+              background: '0 0% 97%', foreground: '216 18% 16%',
+              card: '0 0% 93%', 'card-foreground': '216 18% 16%',
+              'card-bg': '0 0% 93%', 'card-bg-foreground': '216 18% 16%',
+              popover: '0 0% 97%', 'popover-foreground': '216 18% 16%',
+              primary: '183 100% 35%', 'primary-foreground': '0 0% 100%',
+              secondary: '216 10% 90%', 'secondary-foreground': '216 18% 16%',
+              accent: '183 60% 94%', 'accent-foreground': '183 100% 20%',
+              muted: '0 0% 90%', 'muted-foreground': '216 10% 40%',
+              border: '0 0% 85%', input: '0 0% 85%', ring: '183 100% 35%',
+              'chart-1': '183 100% 35%', 'chart-2': '216 18% 16%',
+              'chart-3': '217 10% 25%', 'chart-4': '0 0% 93%', 'chart-5': '0 0% 85%'
+            },
+            sakura: {
+              background: '0 0% 97%', foreground: '244 15% 20%',
+              card: '0 45% 96%', 'card-foreground': '244 15% 20%',
+              'card-bg': '0 45% 96%', 'card-bg-foreground': '244 15% 20%',
+              popover: '0 0% 97%', 'popover-foreground': '244 15% 20%',
+              primary: '244 20% 42%', 'primary-foreground': '0 0% 100%',
+              secondary: '0 20% 94%', 'secondary-foreground': '244 15% 20%',
+              accent: '0 100% 92%', 'accent-foreground': '0 55% 35%',
+              muted: '0 0% 93%', 'muted-foreground': '244 10% 45%',
+              border: '0 30% 90%', input: '0 30% 90%', ring: '244 20% 42%',
+              'chart-1': '244 20% 42%', 'chart-2': '244 15% 20%',
+              'chart-3': '0 100% 89%', 'chart-4': '0 100% 94%', 'chart-5': '0 0% 93%'
+            },
+            torii: {
+              background: '0 0% 97%', foreground: '0 0% 9%',
+              card: '0 0% 93%', 'card-foreground': '0 0% 9%',
+              'card-bg': '0 0% 93%', 'card-bg-foreground': '0 0% 9%',
+              popover: '0 0% 97%', 'popover-foreground': '0 0% 9%',
+              primary: '343 66% 48%', 'primary-foreground': '0 0% 100%',
+              secondary: '0 0% 87%', 'secondary-foreground': '0 0% 9%',
+              accent: '343 60% 95%', 'accent-foreground': '343 66% 30%',
+              muted: '0 0% 90%', 'muted-foreground': '0 0% 40%',
+              border: '0 0% 85%', input: '0 0% 85%', ring: '343 66% 48%',
+              'chart-1': '343 66% 48%', 'chart-2': '0 0% 9%',
+              'chart-3': '0 0% 87%', 'chart-4': '0 0% 93%', 'chart-5': '0 0% 90%'
+            }
+          };
+          // 'default' is intentionally absent — it matches the CSS-authored
+          // :root values already in src/index.css, so there's nothing to
+          // override and no flash to prevent.
+          if (stored && themes[stored]) {
+            var tokens = themes[stored];
+            var root = document.documentElement.style;
+            for (var key in tokens) {
+              if (Object.prototype.hasOwnProperty.call(tokens, key)) {
+                root.setProperty('--' + key, tokens[key]);
+              }
+            }
+          }
+        } catch (e) { /* localStorage blocked — silently use CSS default */ }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

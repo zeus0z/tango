@@ -8,6 +8,18 @@ importers:
 
   .:
     dependencies:
+      '@fontsource/klee-one':
+        specifier: ^5.2.8
+        version: 5.2.8
+      '@fontsource/m-plus-rounded-1c':
+        specifier: ^5.2.10
+        version: 5.2.10
+      '@fontsource/noto-sans-jp':
+        specifier: ^5.2.9
+        version: 5.2.9
+      '@fontsource/noto-serif-jp':
+        specifier: ^5.2.8
+        version: 5.2.8
       '@radix-ui/react-dialog':
         specifier: ^1.1.15
         version: 1.1.15(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -800,6 +812,18 @@ packages:
 
   '@floating-ui/utils@0.2.11':
     resolution: {integrity: sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==}
+
+  '@fontsource/klee-one@5.2.8':
+    resolution: {integrity: sha512-DBJgwhCH1RLtwwqGtcQFa97KZikjYPWyotJaAZzgJTP/7VnARPsMMT4iQhHZzzdrT0fR9vKY55R+DkocRC6Uhw==}
+
+  '@fontsource/m-plus-rounded-1c@5.2.10':
+    resolution: {integrity: sha512-PLrYoJHCBMApU8zioMT+Un6TLr6JTI7lBJWXo+t2ZNdpEn1XqZG3Y3XvNuIxdX1F3m0UqvtEbtBMHgAbTdefOw==}
+
+  '@fontsource/noto-sans-jp@5.2.9':
+    resolution: {integrity: sha512-6yVGiofnrnbiJjU8ch4JGSs2HqyozxMvsVyVmFwOnDH3u//qQKLqmKM4n0lqN0637uaJNzUW9nIJqbbMgHVQzw==}
+
+  '@fontsource/noto-serif-jp@5.2.8':
+    resolution: {integrity: sha512-x+tGrrK+4t/hoHLxAl7Ry5nN8CVPermqz0fD7HtCXzBJSxzFKxNH9y+cuOD3gZW0tyKZ2CD7WvuAfHbISvjL5Q==}
 
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
@@ -4667,6 +4691,14 @@ snapshots:
       react-dom: 19.2.6(react@19.2.6)
 
   '@floating-ui/utils@0.2.11': {}
+
+  '@fontsource/klee-one@5.2.8': {}
+
+  '@fontsource/m-plus-rounded-1c@5.2.10': {}
+
+  '@fontsource/noto-sans-jp@5.2.9': {}
+
+  '@fontsource/noto-serif-jp@5.2.8': {}
 
   '@humanfs/core@0.19.2':
     dependencies:

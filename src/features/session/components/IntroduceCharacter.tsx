@@ -6,8 +6,11 @@
  *  - Compound-lesson (`derived` provided): shows base → derived transformation,
  *    diacritic explanation pulled from DIACRITICS, speaker buttons for both.
  *
- * Mnemonic is shown BY DEFAULT on intro screens (the only place it is).
- * Speaker auto-plays on mount.
+ * Mnemonic is embedded INSIDE the character card (PER-37):
+ *  - Mobile (default): character + mnemonic stacked vertically, separated by a divider.
+ *  - Desktop (md:): character left, mnemonic right, separated by a vertical divider.
+ *
+ * Label reads "Como lembrar:" (pt-BR). Speaker auto-plays on mount.
  */
 
 import { useEffect } from 'react'
@@ -17,8 +20,9 @@ import type { Card } from '@/types'
 import { Button } from '@/components/ui/button'
 import { DIACRITICS } from '@/lib/constants/diacritics'
 import { MnemonicViewer } from '@/features/cards/components/MnemonicViewer'
-import { speakHiragana } from '@/features/cards/utils/speak'
+import { playKana } from '@/features/cards/utils/speak'
 import { cn } from '@/lib/utils'
+import { t } from '@/lib/constants/strings'
 
 // ---------------------------------------------------------------------------
 // Props
@@ -43,11 +47,11 @@ interface IntroduceCharacterProps {
 export function IntroduceCharacter({ card, derived, onAdvance }: IntroduceCharacterProps) {
   const isPair = !!derived
 
-  // Auto-play on mount: base first, then derived (300ms after)
+  // Auto-play on mount: base first, then derived (900ms after)
   useEffect(() => {
-    speakHiragana(card.character)
+    playKana(card.character, card.romaji)
     if (derived) {
-      const t = window.setTimeout(() => speakHiragana(derived.character), 900)
+      const t = window.setTimeout(() => playKana(derived.character, derived.romaji), 900)
       return () => window.clearTimeout(t)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -73,7 +77,7 @@ export function IntroduceCharacter({ card, derived, onAdvance }: IntroduceCharac
         className="w-full min-h-[56px] text-base font-bold rounded-2xl"
         onClick={onAdvance}
       >
-        Got it →
+        {t.introduce.gotIt}
       </Button>
     </motion.div>
   )
@@ -84,19 +88,26 @@ export function IntroduceCharacter({ card, derived, onAdvance }: IntroduceCharac
 // ---------------------------------------------------------------------------
 
 function SoloIntro({ card }: { card: Card }) {
+  const hasMnemonic = !!(card.mnemonics_pt && card.mnemonics_pt.length > 0)
+
   return (
-    <>
-      {/* Character card */}
+    <div
+      className={cn(
+        'w-full rounded-3xl shadow-md bg-card-bg overflow-hidden',
+        'flex flex-col',
+        hasMnemonic && 'md:flex-row',
+      )}
+    >
+      {/* ── Character section ─────────────────────────────────────────────── */}
       <div
         className={cn(
-          'relative w-full rounded-3xl shadow-md',
-          'bg-card-bg',
-          'flex flex-col items-center justify-center',
+          'relative flex flex-col items-center justify-center',
           'py-14 px-4',
+          hasMnemonic && 'md:flex-1',
         )}
       >
-        {/* Speaker — top-right */}
-        <SpeakerButton character={card.character} />
+        {/* Speaker — top-right of character section */}
+        <SpeakerButton character={card.character} romaji={card.romaji} />
 
         <p lang="ja" className="font-ja text-[9rem] leading-none text-foreground select-none">
           {card.character}
@@ -107,21 +118,31 @@ function SoloIntro({ card }: { card: Card }) {
         </p>
       </div>
 
-      {/* Mnemonic — shown by default */}
-      {card.mnemonics_pt && card.mnemonics_pt.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2, delay: 0.15 }}
-          className="w-full rounded-2xl bg-card px-4 py-3 shadow-sm border border-border"
-        >
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-            Memory hook
-          </p>
-          <MnemonicViewer mnemonics={card.mnemonics_pt} textClassName="text-foreground" />
-        </motion.div>
+      {/* ── Mnemonic section — embedded inside the card ───────────────────── */}
+      {hasMnemonic && (
+        <>
+          {/* Mobile: horizontal rule; Desktop: vertical separator */}
+          <div className="h-px bg-border md:hidden" />
+          <div className="hidden md:block w-px bg-border self-stretch" />
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2, delay: 0.15 }}
+            className="flex flex-col justify-center px-5 py-5 md:flex-1"
+          >
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+              {t.introduce.memoryHook}:
+            </p>
+            <MnemonicViewer
+              mnemonics={card.mnemonics_pt!}
+              keywords={card.mnemonic_keyword ?? undefined}
+              textClassName="text-foreground"
+            />
+          </motion.div>
+        </>
       )}
-    </>
+    </div>
   )
 }
 
@@ -132,6 +153,7 @@ function SoloIntro({ card }: { card: Card }) {
 function PairIntro({ card, derived }: { card: Card; derived: Card }) {
   const diacriticType = derived.diacritic ?? 'dakuten'
   const info = DIACRITICS[diacriticType]
+  const hasMnemonic = !!(card.mnemonics_pt && card.mnemonics_pt.length > 0)
 
   return (
     <>
@@ -148,21 +170,46 @@ function PairIntro({ card, derived }: { card: Card; derived: Card }) {
         {derived.romaji}
       </motion.p>
 
-      {/* Transformation row: base ──arrow──> derived */}
-      <div className="w-full flex items-center justify-center gap-3">
-        {/* Base character tile */}
-        <CharTile card={card} />
+      {/* ── Compound character card: transformation row + mnemonic ─────────── */}
+      <div className="w-full rounded-3xl shadow-md bg-card-bg overflow-hidden">
+        {/* Transformation row: base ──arrow──> derived */}
+        <div className="flex items-center justify-center gap-3 px-4 py-8">
+          {/* Base character tile */}
+          <CharTile card={card} />
 
-        {/* Arrow + diacritic mark */}
-        <div className="flex flex-col items-center gap-1 shrink-0">
-          <span lang="ja" className="text-2xl text-muted-foreground font-ja leading-none">
-            {info.mark}
-          </span>
-          <ArrowRight size={28} className="text-muted-foreground" strokeWidth={2.5} />
+          {/* Arrow + diacritic mark */}
+          <div className="flex flex-col items-center gap-1 shrink-0">
+            <span lang="ja" className="text-2xl text-muted-foreground font-ja leading-none">
+              {info.mark}
+            </span>
+            <ArrowRight size={28} className="text-muted-foreground" strokeWidth={2.5} />
+          </div>
+
+          {/* Derived character tile */}
+          <CharTile card={derived} />
         </div>
 
-        {/* Derived character tile */}
-        <CharTile card={derived} />
+        {/* Mnemonic — integrated below the transformation row */}
+        {hasMnemonic && (
+          <>
+            <div className="h-px bg-border" />
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.2, delay: 0.2 }}
+              className="px-5 py-4 flex flex-col gap-2"
+            >
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                {t.introduce.memoryHookWithRomaji(card.romaji)}
+              </p>
+              <MnemonicViewer
+                mnemonics={card.mnemonics_pt!}
+                keywords={card.mnemonic_keyword ?? undefined}
+                textClassName="text-foreground"
+              />
+            </motion.div>
+          </>
+        )}
       </div>
 
       {/* Diacritic explanation block */}
@@ -190,21 +237,6 @@ function PairIntro({ card, derived }: { card: Card; derived: Card }) {
         {/* Worked example */}
         <p className="text-xs text-muted-foreground italic">{info.example}</p>
       </motion.div>
-
-      {/* Base mnemonic — shown by default */}
-      {card.mnemonics_pt && card.mnemonics_pt.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2, delay: 0.3 }}
-          className="w-full rounded-2xl bg-card px-4 py-3 shadow-sm border border-border"
-        >
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-            Memory hook ({card.romaji})
-          </p>
-          <MnemonicViewer mnemonics={card.mnemonics_pt} textClassName="text-foreground" />
-        </motion.div>
-      )}
     </>
   )
 }
@@ -224,7 +256,7 @@ function CharTile({ card }: { card: Card }) {
         'min-w-0',
       )}
     >
-      <SpeakerButton character={card.character} />
+      <SpeakerButton character={card.character} romaji={card.romaji} />
 
       <p lang="ja" className="font-ja text-7xl leading-none text-foreground select-none">
         {card.character}
@@ -240,14 +272,14 @@ function CharTile({ card }: { card: Card }) {
 // SpeakerButton
 // ---------------------------------------------------------------------------
 
-function SpeakerButton({ character }: { character: string }) {
+function SpeakerButton({ character, romaji }: { character: string; romaji: string }) {
   return (
     <button
       type="button"
-      aria-label="Play pronunciation"
+      aria-label={t.common.playPronunciation}
       onClick={(e) => {
         e.stopPropagation()
-        speakHiragana(character)
+        playKana(character, romaji)
       }}
       className={cn(
         'absolute top-3 right-3',

@@ -13,7 +13,8 @@
  * Mobile-first: tap targets ≥48px, active: states, safe-area padding.
  */
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import Layout from '@/components/Layout'
@@ -22,6 +23,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 
 import { signInWithGoogle } from '@/features/auth/authService'
+import { useAuthSession } from '@/features/auth/useAuth'
+import { t } from '@/lib/constants/strings'
 
 // ---------------------------------------------------------------------------
 // Google icon (inline SVG — no extra dep)
@@ -61,6 +64,17 @@ function GoogleIcon() {
 
 export default function LoginPage() {
   const [googleLoading, setGoogleLoading] = useState(false)
+  const session = useAuthSession()
+  const navigate = useNavigate()
+
+  // Safety net for the OAuth-redirect race in ProtectedRoute (router.tsx):
+  // if a session ever ends up resolved while the user is stranded here,
+  // send them on to /home instead of leaving them looking logged out.
+  useEffect(() => {
+    if (session) {
+      navigate('/home', { replace: true })
+    }
+  }, [session, navigate])
 
   // ── Google OAuth ──────────────────────────────────────────────────────────
 
@@ -69,11 +83,11 @@ export default function LoginPage() {
     try {
       const { error } = await signInWithGoogle()
       if (error) {
-        toast.error(error.message || 'Google sign-in failed. Please try again.')
+        toast.error(t.auth.googleSignInError)
       }
       // On success the browser redirects; no further action needed here.
     } catch {
-      toast.error('Something went wrong. Please try again.')
+      toast.error(t.auth.genericError)
     } finally {
       setGoogleLoading(false)
     }
@@ -88,14 +102,14 @@ export default function LoginPage() {
           {/* ── Branding ── */}
           <div className="flex flex-col items-center gap-1 text-center">
             <h1 className="text-3xl font-bold tracking-tight">日本語フラッシュ</h1>
-            <p className="text-muted-foreground text-sm">Tango — learn Japanese with SRS</p>
+            <p className="text-muted-foreground text-sm">{t.auth.loginSubtitle}</p>
           </div>
 
           {/* ── Auth card ── */}
           <Card className="w-full max-w-sm">
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg">Welcome to Tango</CardTitle>
-              <CardDescription>Sign in with Google to start your hiragana journey.</CardDescription>
+              <CardTitle className="text-lg">{t.auth.welcomeTitle}</CardTitle>
+              <CardDescription>{t.auth.welcomeDescription}</CardDescription>
             </CardHeader>
 
             <CardContent className="flex flex-col gap-4">
@@ -106,10 +120,10 @@ export default function LoginPage() {
                 className="w-full gap-3"
                 disabled={googleLoading}
                 onClick={handleGoogleSignIn}
-                aria-label="Continue with Google"
+                aria-label={t.auth.continueWithGoogle}
               >
                 <GoogleIcon />
-                <span>Continue with Google</span>
+                <span>{t.auth.continueWithGoogle}</span>
               </Button>
 
               {/* Email/password sign-in is temporarily disabled — see the

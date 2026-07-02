@@ -29,6 +29,18 @@ export interface Card {
   example_word_romaji?: string | null
   /** PT-BR memory hooks (≈2 per base card), primary first. Derived cards inherit the base's. */
   mnemonics_pt?: string[] | null
+  /**
+   * Parallel to mnemonics_pt — the exact word/substring to highlight in each entry.
+   * An empty string means no highlight for that entry. Null = column absent (old rows).
+   */
+  mnemonic_keyword?: string[] | null
+  /** English memory hooks (≈2 per base card). Selected when locale is EN (PER-29). */
+  mnemonics_en?: string[] | null
+  /**
+   * Parallel to mnemonics_en — the exact word/substring to highlight in each EN entry.
+   * An empty string means no highlight for that entry.
+   */
+  mnemonic_keyword_en?: string[] | null
   derives_from?: string | null
   diacritic?: 'dakuten' | 'handakuten' | null
 }

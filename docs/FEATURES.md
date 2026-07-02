@@ -28,6 +28,7 @@ Shown after login. Displays:
 - **Milestones**: contextual banners, e.g. "You completed the vowel group!"
 - **Session mode selector**: three spaced-repetition buttons to start a session, plus a separate **Infinite Review** button
   - A small **green note** sits under the 🌱 Learn button: _"Do this daily to become fluent in Japanese."_ — daily spaced repetition is the primary path; Infinite Review is optional practice.
+- Tapping the avatar navigates to the **Account page** (see §3.5) — it is not a dropdown menu.
 
 ### Session Modes
 | Mode | Description |
@@ -36,6 +37,16 @@ Shown after login. Displays:
 | 🔁 Review Recent | Only cards introduced in the last 7 days that are due |
 | 📚 Review All | Every card due today based on full FSRS history |
 | ♾️ Infinite Review | Endless practice of all learnt cards of one script — opens a setup screen first (see §5.5). Practice-only, does **not** touch FSRS. |
+
+---
+
+## 3.5 Account Page (`/account`)
+
+Reached by tapping the avatar on Home. Full-screen settings page (not a dropdown), holding:
+- **Aparência** — theme picker (color theme, live preview via a small multi-color swatch per option) and font picker (Japanese glyph font, e.g. textbook-style Klee One). Both apply immediately, no reload.
+- **Conta** — sign out.
+
+Preference is **local to the device** (localStorage), not synced across devices — same behaviour as the font picker.
 
 ---
 
@@ -53,6 +64,15 @@ Shown after login. Displays:
 - **Back**: 6 hiragana characters displayed as a grid of tappable cards
 - Distractors are always from the same phonetic family when possible
 - (e.g. for `ka`, mix in characters from the k-group + 1–2 random others)
+
+---
+
+## 4.5 Kana Pronunciation Audio
+
+- Tapping the speaker icon (Card Type A, Card Type B after reveal, and the character introduction screen) plays a native-quality recording of the kana's sound.
+- The introduction screen (`IntroduceCharacter`) also auto-plays audio on mount: base character first, then the derived character (for dakuten/handakuten pairs) 900 ms later.
+- Audio is a **static, offline-precached MP3 per sound**, keyed by **romaji** (not by glyph) — so hiragana and katakana share the exact same clip for identical sounds, and homophones (`じ`/`ぢ` → `ji`, `ず`/`づ` → `zu`) don't need duplicate files.
+- If a clip is missing or fails to play, playback falls back to the browser's Web Speech API so the app never goes silent — this fallback is not the primary path and should stay that way.
 
 ---
 
@@ -154,10 +174,11 @@ A **secondary, optional** practice mode. Unlike spaced repetition (which surface
 
 > Reflects what is actually shipped. Specs above describe intent; this section records reality.
 
-### §1 Auth (PER-11)
+### §1 Auth (PER-11, PER-33)
 - `src/features/auth/` — `useAuth` hook + `AppAuthProvider` (mounted once between `ErrorBoundary` and the router in `App.tsx`) subscribe to `supabase.auth.onAuthStateChange` and sync the session into the Zustand auth slot.
 - `LoginPage` shows Google OAuth only — the tab toggle and email/password form are commented out in place (not deleted), pending a custom SMTP provider. See `docs/email-templates.md` "Future polish". Auth errors → sonner toast. On success: `navigate('/home')`.
 - Google OAuth uses `supabase.auth.signInWithOAuth({ provider: 'google' })`; the redirect URL is configured in the Supabase project, not in the client. The Google provider must be enabled in Supabase Dashboard → Authentication → Providers with a Google Cloud OAuth Client ID/Secret, and the consent screen must be published to **Production** (not Testing — Testing's 100-user allow-list blocks anyone not manually added).
+- **Auth resolution pattern (PER-33):** Both `ProtectedRoute` (routing gate) and `useAuthListener` (Zustand sync) use **only** `supabase.auth.onAuthStateChange` — no `getSession()` call. `onAuthStateChange` fires `INITIAL_SESSION` (cached session or null) or `SIGNED_IN` (after OAuth hash exchange), always after the Supabase client has finished processing the URL hash. Calling `getSession()` first raced against this async hash processing and caused the OAuth redirect to `/home` to immediately bounce back to `/` before the session was established.
 - Profile + initial progress rows are created server-side by the `handle_new_user` trigger from D1.
 - shadcn `input.tsx` and `label.tsx` primitives were added by this issue.
 
@@ -172,6 +193,14 @@ A **secondary, optional** practice mode. Unlike spaced repetition (which surface
 - **Mastery threshold (locked-in convention)**: FSRS `state === 'Review'` AND `stability >= 21` days → `Mastered`. Lower stability stays `Review`. `Learning` and `New` (Unseen) map 1:1.
 - **Mode handoff** to `/session`: React Router location state — `navigate('/session', { state: { mode } })`.
 - Milestone banner derives from `progress` grouped by `group_name` from constants (e.g. "You completed the vowel group!").
+
+### §3.5 Account Page (PER-36, retroactively includes PER-40 font picker)
+- `src/pages/AccountPage.tsx` (route `/account`): `PageTransition`-only wrapper (no `Layout`) — same pattern as `InfiniteReviewPage.tsx`, since this is a secondary screen reached via a back button, not a primary bottom-nav destination.
+- **Theme picker**: `src/lib/themes.ts` — `THEME_OPTIONS` (4 themes: `default`/"Original", `midnight`/"Meia-noite", `sakura`/"Sakura", `torii`/"Torii"), each a full set of ~20 shadcn/Tailwind CSS custom-property overrides (HSL triplets) plus a 4-hex `swatch` for the picker's 2×2 preview cluster. `applyTheme()` writes every token onto `document.documentElement.style` — no React re-render needed. `persistAndApplyTheme()` + `getPersistedThemeId()` follow the exact localStorage pattern below (key `tango-theme`). Success/danger feedback colors are intentionally **constant across all themes** so correct/wrong SRS signals stay recognizable regardless of active theme. Themes were hand-authored per-theme (not derived programmatically) from 4 Color Hunt palettes, using the lightest palette member for surfaces, the darkest for ink/foreground, and the mid-lightness/high-saturation member for `--primary`.
+- **Font picker** (PER-40, moved here from the old avatar dropdown): `src/lib/fonts.ts` — `FONT_OPTIONS`, `loadFont()` (lazy `@fontsource` import), `persistAndApply()` (sets `--font-ja`), `getPersistedFontId()` (localStorage key `tango-ja-font`).
+- Both pickers are backed by a matching Zustand slot in `src/lib/store.ts` (`fontId`/`setFontId`, `themeId`/`setThemeId`) seeded from localStorage on store creation, so the picker shows the right selection on first render.
+- **FOUT/FOUC prevention**: `index.html` has two inline `<script>` blocks that run before any React code, reading the persisted font/theme ids from localStorage and applying the CSS custom properties directly — eliminating the flash of the default font/theme on load. The theme table there is hand-duplicated from `THEME_OPTIONS` and must be kept in sync manually (no automated check).
+- Persistence is **localStorage only**, not Supabase — a deliberate PER-36 deviation from the ticket's own suggested design (which proposed a `profiles.theme_id` column), matching the precedent already set by the font picker.
 
 ### §4 Cards (PER-13)
 - `src/features/cards/` exports `CardTypeA`, `CardTypeB`, `RomajiGrid`, `AnswerFeedback` via the barrel.
@@ -191,6 +220,14 @@ A **secondary, optional** practice mode. Unlike spaced repetition (which surface
 - `NextButton.tsx`: single CTA, styled like `IntroduceCharacter`'s "Got it →" button. Used for: Learn mode (both outcomes), Review Recent/All's wrong-answer path, and Infinite Review (both outcomes, see §5.5).
 - Summary screen derives counters from session-local state, then "return home" → `/home`.
 - Session-internal state (queue, queue index, daily counters) lives in the Zustand `studySession` + `dailyProgress` slots.
+
+### §4.5 Kana Audio (PER-35)
+- `src/features/cards/utils/speak.ts` exports `playKana(character, romaji)`. Primary path: `new Audio('/audio/kana/${romaji}.mp3').play()`, cancelling any in-flight clip via a module-level ref first (mirrors the old `speechSynthesis.cancel()` behaviour without touching unrelated page speech). On an `error` event or a rejected `play()` promise (e.g. autoplay-blocked, missing file), it falls back to `SpeechSynthesisUtterance` — the same logic the old `speakHiragana` used, now private to this module.
+- Clips live in `public/audio/kana/*.mp3` (currently 102 files, ~680 KB total) and are precached by the PWA — `vite.config.ts`'s Workbox `globPatterns` includes `mp3`.
+- **Generation** (one-time, dev-machine only — not run in CI or at build time): `pnpm generate:audio` runs `scripts/generate-kana-audio.mjs`, which reads `scripts/kana-sounds.json` (the manifest: `{ id, text, script }`, `id` = romaji filename stem) and for each entry shells out to the `edge-tts` CLI (`ja-JP-NanamiNeural` voice, install via `pip install edge-tts` — not a repo dependency) then pipes through `ffmpeg` to trim silence, pad the tail, and loudness-normalize. Idempotent — pass `--force` to regenerate.
+- The manifest intentionally covers the **full standard kana inventory** (46 gojūon + 25 dakuten/handakuten + 33 youon = 102 unique romaji), not just the 71 currently-seeded `HIRAGANA` entries — so katakana and youon curriculum additions get audio "for free" without touching this pipeline again. `speak.test.ts`'s "kana audio manifest coverage" test guards that every seeded romaji has a manifest entry.
+- **Future extension — kanji / example words are out of scope for this pipeline.** Kanji have per-word readings (unbounded set, not a fixed per-glyph sound), so they'd need a `"word"`-scripted section in the same manifest keyed by `example_word_romaji`, generated per word as vocabulary is added — not built yet.
+- Voice: Microsoft Edge neural TTS via the unofficial `edge-tts` endpoint, used only as a one-time build tool — the repo ships only the resulting static MP3s, no runtime dependency on the tool or the endpoint. If that endpoint ever becomes unavailable, Wikimedia Commons' CC-licensed native-speaker kana recordings are the documented fallback source (requires attribution).
 
 ### §5.5 Infinite Review (PER-26)
 - Read-only queue builder `buildInfiniteReviewQueue(userId, script)` in `buildSession.ts`: like Review All but **no `due` filter** and `.eq('type', script)`; "learnt" = `user_card_progress.reps > 0`. `fetchLearntScriptCounts(userId)` returns per-script learnt counts to drive the setup screen's enable/disable.

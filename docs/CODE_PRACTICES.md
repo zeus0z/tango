@@ -195,10 +195,12 @@ export function useSubmitReview() {
 
 ## Error Handling
 
-- Use an `ErrorBoundary` component at the page level
+- Use an `ErrorBoundary` component at the page level (class component in `src/components/ErrorBoundary.tsx`)
+- Every React Router route must specify `errorElement: <RouteErrorPage />` — both the parent layout route and every child route — so React Router never falls back to its default error UI
 - TanStack Query error states must be handled in every `useQuery` consumer
 - Auth errors redirect to `/` with a toast message
-- Never `console.error` in production — use a structured error handler
+- Never `console.error` in production — use `reportError()` from `src/lib/errorReporter.ts`
+- To wire an external error service (e.g. Sentry): call `setErrorReporter()` in `main.tsx` once at boot; the reporter is a no-op until configured
 
 ---
 
@@ -242,3 +244,39 @@ Every feature folder ships a barrel `src/features/<name>/index.ts` exposing only
 - Routing is owned by F7 (`src/router.tsx`) — feature work never edits the router.
 - Use `sonner` for toasts (not Radix toast). It's already wired by F7.
 - Library docs: use the **`context7` MCP** (`mcp__context7__resolve-library-id` → `mcp__context7__query-docs`) for any library, framework, SDK, API, or CLI — see CLAUDE.md Golden Rules.
+
+### User preference / appearance pattern (fonts, themes)
+For any device-local, non-critical user preference (Japanese font, color theme, etc.), follow the shape established by `src/lib/fonts.ts` and `src/lib/themes.ts`:
+- A dedicated `src/lib/<preference>.ts` module exporting: a typed `Option[]` constant, an `apply<X>()` function that writes CSS custom properties onto `document.documentElement.style` (no React re-render needed — the cascade handles it), `getPersisted<X>Id()` (reads `localStorage`, falls back to a `DEFAULT_<X>_ID` constant, safe to call during module init before React mounts), and `persistAndApply<X>()` (writes `localStorage` + calls `apply<X>()`).
+- Persist to **`localStorage` only** — not Supabase — unless the preference genuinely needs cross-device sync. This keeps the pattern dependency-free and instant (no network round-trip, no loading state).
+- A matching Zustand slot (`<x>Id`/`set<X>Id`) in `src/lib/store.ts`, seeded from `getPersisted<X>Id()` at store creation, plus `use<X>Id()`/`useSet<X>Id()` selector hooks.
+- A blocking inline `<script>` in `index.html`, reading the persisted id from `localStorage` and applying the same CSS custom properties **before any React code runs**, to prevent a flash of the wrong preference on load (FOUT/FOUC). This table is hand-duplicated from the `Option[]` constant and kept in sync manually — there is no automated check.
+- Both live pickers currently sit together on `src/pages/AccountPage.tsx` under one "Aparência" section.
+
+---
+
+## Internationalisation (i18n)
+
+**Architecture: zero-dependency constant catalog. Single locale: pt-BR. No language toggle (YAGNI).**
+
+All user-facing strings live in `src/lib/constants/strings.ts`, exported as the `t` object. Components import and use it directly — no i18n runtime, no context, no lazy loading.
+
+```ts
+import { t } from '@/lib/constants/strings'
+
+// Static string
+<h1>{t.landing.headline}</h1>
+
+// Interpolated (exported as arrow functions)
+<p>{t.home.signedInAs(user.email)}</p>
+<p>{t.heatmap.cardCount(count)}</p>
+```
+
+### Rules
+- **Every user-visible string must come from `t`** — no hardcoded English (or Portuguese) in JSX or toasts.
+- `t` is re-exported from `src/lib/constants/index.ts` — you can import from either path.
+- Interpolated strings are tiny arrow functions inside the `t` object. Keep them pure (no side effects).
+- Do **NOT** translate: Japanese/romaji text, proper nouns (Genki, Tango, FSRS, Google), developer-only strings (console logs, error reporter payloads), test files, Supabase migrations.
+- The `shadcn` primitives in `src/components/ui/` are not translated — they are headless and emit no visible text.
+- When adding a new screen or toast, add its strings to `strings.ts` first, under the appropriate section. If a new section is needed, add it with a comment header.
+- Mastery state values (`'Unseen' | 'Learning' | 'Review' | 'Mastered'`) are TypeScript discriminated-union keys — never change them. Their display labels live at `t.mastery.*` and must be used wherever the state is shown to the user.

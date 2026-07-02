@@ -5,12 +5,27 @@
  * Single centered column on all breakpoints — sized to fit one viewport, no scroll.
  */
 
+import { useEffect } from 'react'
 import { Heart } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import PageTransition from '@/components/PageTransition'
 import { Button } from '@/components/ui/button'
+import { t } from '@/lib/constants/strings'
+import { useAuthSession } from '@/features/auth/useAuth'
 
 export default function LandingPage() {
+  const session = useAuthSession()
+  const navigate = useNavigate()
+
+  // Safety net for the OAuth-redirect race in ProtectedRoute (router.tsx):
+  // if a session ever ends up resolved while the user is stranded here,
+  // send them on to /home instead of leaving them looking logged out.
+  useEffect(() => {
+    if (session) {
+      navigate('/home', { replace: true })
+    }
+  }, [session, navigate])
+
   return (
     <PageTransition>
       {/*
@@ -32,7 +47,7 @@ export default function LandingPage() {
               </span>
             </div>
             <h1 className="text-4xl md:text-5xl font-bold leading-tight text-foreground">
-              Learn Japanese<br />
+              {t.landing.headline}<br />
               <span lang="ja" className="font-ja text-primary">
                 あいうえお
               </span>
@@ -41,16 +56,14 @@ export default function LandingPage() {
 
           {/* Short pitch */}
           <p className="text-base text-muted-foreground max-w-sm">
-            Master hiragana and katakana through smart spaced repetition —
-            built on the <strong className="text-foreground">Genki I/II</strong> curriculum.
-            No fluff. Just kana.
+            {t.landing.pitchPart1}<strong className="text-foreground">Genki I/II</strong>{t.landing.pitchPart2}
           </p>
 
           {/* Feature bullets */}
           <ul className="text-sm text-muted-foreground space-y-1">
             {[
-              'FSRS algorithm — smarter scheduling',
-              'Genki-ordered hiragana & katakana',
+              t.landing.featureFSRS,
+              t.landing.featureGenki,
             ].map((item) => (
               <li key={item} className="flex items-center gap-2">
                 <span className="text-primary" aria-hidden="true">✦</span>
@@ -62,10 +75,10 @@ export default function LandingPage() {
           {/* CTA buttons */}
           <div className="flex flex-col gap-3 w-full max-w-xs pb-[env(safe-area-inset-bottom)]">
             <Button asChild size="lg" className="w-full text-base">
-              <Link to="/login?signup=1">Get started — it&apos;s free</Link>
+              <Link to="/login?signup=1">{t.landing.ctaSignup}</Link>
             </Button>
             <Button asChild variant="ghost" className="w-full text-sm text-muted-foreground">
-              <Link to="/login">Already have an account? Log in</Link>
+              <Link to="/login">{t.landing.ctaLogin}</Link>
             </Button>
           </div>
         </main>
@@ -83,7 +96,7 @@ export default function LandingPage() {
               construí-la ao seu lado.
             </p>
           </div>
-          <p>&copy; {new Date().getFullYear()} Tango. Built for learners.</p>
+          <p>&copy; {new Date().getFullYear()} Tango. {t.landing.footerTagline}</p>
         </footer>
       </div>
     </PageTransition>

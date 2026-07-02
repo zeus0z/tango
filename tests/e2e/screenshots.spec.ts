@@ -15,6 +15,7 @@ const ROUTES: Array<{ name: string; path: string }> = [
   { name: 'home', path: '/home' },
   { name: 'progress', path: '/progress' },
   { name: 'session', path: '/session' },
+  { name: 'account', path: '/account' },
 ]
 
 test.describe('@screenshot', () => {
@@ -71,9 +72,9 @@ test.describe('@screenshot infinite-review', () => {
 
     // Pick hiragana, start, capture the looping session
     await authedPage.getByRole('button', { name: /Hiragana/ }).click()
-    await authedPage.getByRole('button', { name: /Start practising/ }).click()
+    await authedPage.getByRole('button', { name: /Começar a praticar/ }).click()
     await authedPage.waitForLoadState('networkidle')
-    await authedPage.getByText('Exit').waitFor()
+    await authedPage.getByText(/Sair/).waitFor()
     await authedPage.screenshot({
       path: `screenshots/infinite-review-session-${project}.png`,
       fullPage: true,
@@ -102,11 +103,11 @@ test.describe('@screenshot learn-mnemonic', () => {
     await authedPage.waitForLoadState('networkidle')
 
     // Start a Learn session (navigates to /session via location state).
-    await authedPage.getByRole('button', { name: /^Learn/ }).click()
+    await authedPage.getByRole('button', { name: /^Aprender/ }).click()
     await authedPage.waitForLoadState('networkidle')
 
-    // The intro screen renders the Memory hook block by default.
-    await authedPage.getByText('Memory hook').waitFor()
+    // The intro screen renders the "Como lembrar" block by default.
+    await authedPage.getByText(/Como lembrar/).waitFor()
     await authedPage.screenshot({
       path: `screenshots/learn-mnemonic-${testInfo.project.name}.png`,
       fullPage: true,
@@ -126,15 +127,15 @@ test.describe('@screenshot learn-drill-feedback', () => {
   test('capture learn drill wrong-answer feedback + Next button', async ({ authedPage }, testInfo) => {
     await authedPage.goto('/home')
     await authedPage.waitForLoadState('networkidle')
-    await authedPage.getByRole('button', { name: /^Learn/ }).click()
+    await authedPage.getByRole('button', { name: /^Aprender/ }).click()
     await authedPage.waitForLoadState('networkidle')
 
     // Intro screen for あ → drill (Type A: symbol → sound)
-    await authedPage.getByRole('button', { name: /Got it/ }).click()
+    await authedPage.getByRole('button', { name: /Entendido/ }).click()
     await authedPage.locator('p.font-ja.text-8xl').click() // reveal romaji grid
     await authedPage.getByRole('button', { name: 'ka', exact: true }).click() // wrong (correct is 'a')
 
-    await authedPage.getByRole('button', { name: /Next/ }).waitFor()
+    await authedPage.getByRole('button', { name: /Próximo/ }).waitFor()
     await authedPage.screenshot({
       path: `screenshots/learn-drill-feedback-${testInfo.project.name}.png`,
       fullPage: true,
@@ -164,7 +165,7 @@ test.describe('@screenshot review-drill-feedback', () => {
   test('capture review wrong-answer feedback + Next button', async ({ authedPage }, testInfo) => {
     await authedPage.goto('/home')
     await authedPage.waitForLoadState('networkidle')
-    await authedPage.getByRole('button', { name: /Review All/ }).click()
+    await authedPage.getByRole('button', { name: /Revisar tudo/ }).click()
     await authedPage.waitForLoadState('networkidle')
 
     await authedPage.locator('p.text-4xl.font-bold').first().click() // reveal 6 tiles
@@ -177,9 +178,59 @@ test.describe('@screenshot review-drill-feedback', () => {
       }
     }
 
-    await authedPage.getByRole('button', { name: /Next/ }).waitFor()
+    await authedPage.getByRole('button', { name: /Próximo/ }).waitFor()
     await authedPage.screenshot({
       path: `screenshots/review-drill-feedback-${testInfo.project.name}.png`,
+      fullPage: true,
+    })
+  })
+})
+
+/**
+ * Account page (PER-36) — replaces the old avatar dropdown. Tapping the
+ * avatar on /home now navigates straight to /account, which holds the theme
+ * picker, font picker (PER-40, moved here), and sign out. Captures the page
+ * itself, then applied Klee One font and two applied themes (Meia-noite,
+ * Sakura) per PER-36's acceptance criteria.
+ */
+test.describe('@screenshot account-page', () => {
+  test('capture account page, applied font, and two applied themes', async ({ authedPage }, testInfo) => {
+    const project = testInfo.project.name
+
+    await authedPage.goto('/home')
+    await authedPage.waitForLoadState('networkidle')
+
+    // Avatar now navigates directly to /account (no dropdown)
+    await authedPage.getByRole('button', { name: /Menu da conta/ }).click()
+    await authedPage.waitForLoadState('networkidle')
+    await authedPage.getByText('Aparência').waitFor()
+
+    await authedPage.screenshot({
+      path: `screenshots/account-page-${project}.png`,
+      fullPage: true,
+    })
+
+    // Select "Livro didático" (Klee One) and capture the result
+    await authedPage.getByRole('button', { name: 'Livro didático' }).click()
+    await authedPage.waitForLoadState('networkidle')
+    await authedPage.screenshot({
+      path: `screenshots/font-klee-one-${project}.png`,
+      fullPage: true,
+    })
+
+    // Select the Meia-noite theme and capture the applied result
+    await authedPage.getByRole('button', { name: 'Meia-noite' }).click()
+    await authedPage.waitForTimeout(150) // CSS var swap, no navigation/animation to wait on
+    await authedPage.screenshot({
+      path: `screenshots/theme-midnight-${project}.png`,
+      fullPage: true,
+    })
+
+    // Select the Sakura theme and capture the applied result
+    await authedPage.getByRole('button', { name: 'Sakura' }).click()
+    await authedPage.waitForTimeout(150)
+    await authedPage.screenshot({
+      path: `screenshots/theme-sakura-${project}.png`,
       fullPage: true,
     })
   })

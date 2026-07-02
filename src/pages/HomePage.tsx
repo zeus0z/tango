@@ -16,29 +16,24 @@
  * See SessionModeSelector for the full contract documentation.
  */
 
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/features/auth/useAuth'
 import { useTodayLearnedCount, useCharacterMasteryMap } from '@/features/home/hooks/useHomeData'
 import { DailyGoalTracker } from '@/features/home/components/DailyGoalTracker'
 import { MilestoneBanner } from '@/features/home/components/MilestoneBanner'
 import { SessionModeSelector } from '@/features/home/components/SessionModeSelector'
 import { AlphabetProgressMap } from '@/components/AlphabetProgressMap'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import Layout from '@/components/Layout'
 import PageTransition from '@/components/PageTransition'
+import { t } from '@/lib/constants/strings'
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
 export default function HomePage() {
-  const { user, logout } = useAuth()
+  const navigate = useNavigate()
+  const { user } = useAuth()
   const userId = user?.id
 
   const { data: learnedToday, isLoading: loadingCount } = useTodayLearnedCount(userId)
@@ -59,30 +54,19 @@ export default function HomePage() {
                 <span className="tracking-widest uppercase text-sm">TANGO</span>
               </h1>
               <p className="text-sm text-muted-foreground">
-                {user?.email ? `Signed in as ${user.email}` : 'Loading…'}
+                {user?.email ? t.home.signedInAs(user.email) : t.home.loadingUser}
               </p>
             </div>
 
-            {/* Avatar — tapping opens the account menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground active:opacity-80"
-                  aria-label="Account menu"
-                >
-                  {initial}
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuLabel className="text-xs font-normal text-muted-foreground truncate">
-                  {user?.email}
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={logout}>
-                  Sign out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Avatar — tapping navigates to the Account page */}
+            <button
+              type="button"
+              onClick={() => navigate('/account')}
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground active:opacity-80"
+              aria-label={t.home.accountMenu}
+            >
+              {initial}
+            </button>
           </header>
 
           {/* ── Milestone banner (conditional) ─────────────────────────── */}
@@ -93,7 +77,7 @@ export default function HomePage() {
           {/* ── Daily goal tracker ──────────────────────────────────────── */}
           <section aria-labelledby="daily-goal-heading">
             <h2 id="daily-goal-heading" className="sr-only">
-              Daily goal
+              {t.home.dailyGoalHeading}
             </h2>
             <DailyGoalTracker
               learnedToday={learnedToday ?? 0}
@@ -107,12 +91,12 @@ export default function HomePage() {
               id="progress-map-heading"
               className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground"
             >
-              Hiragana progress
+              {t.home.hiraganaProgress}
             </h2>
 
             {loadingMap ? (
               <div className="flex h-32 items-center justify-center">
-                <p className="text-sm text-muted-foreground">Loading map…</p>
+                <p className="text-sm text-muted-foreground">{t.home.loadingMap}</p>
               </div>
             ) : (
               <AlphabetProgressMap
@@ -125,15 +109,15 @@ export default function HomePage() {
             <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1">
               {(
                 [
-                  { label: 'Unseen', cls: 'bg-muted' },
-                  { label: 'Learning', cls: 'bg-amber-200' },
-                  { label: 'Review', cls: 'bg-blue-200' },
-                  { label: 'Mastered', cls: 'bg-green-300' },
+                  { key: 'Unseen', cls: 'bg-muted' },
+                  { key: 'Learning', cls: 'bg-amber-200' },
+                  { key: 'Review', cls: 'bg-blue-200' },
+                  { key: 'Mastered', cls: 'bg-green-300' },
                 ] as const
-              ).map(({ label, cls }) => (
-                <div key={label} className="flex items-center gap-1.5">
+              ).map(({ key, cls }) => (
+                <div key={key} className="flex items-center gap-1.5">
                   <span className={`h-3 w-3 rounded-sm ${cls}`} aria-hidden="true" />
-                  <span className="text-xs text-muted-foreground">{label}</span>
+                  <span className="text-xs text-muted-foreground">{t.mastery[key]}</span>
                 </div>
               ))}
             </div>
@@ -142,7 +126,7 @@ export default function HomePage() {
           {/* ── Session mode selector ───────────────────────────────────── */}
           <section aria-labelledby="session-heading">
             <h2 id="session-heading" className="sr-only">
-              Start a study session
+              {t.home.startSession}
             </h2>
             <SessionModeSelector />
           </section>

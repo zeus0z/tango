@@ -23,6 +23,8 @@
 import { create } from 'zustand'
 import type { Session } from '@supabase/supabase-js'
 import type { SessionMode } from '@/types'
+import { getPersistedFontId, DEFAULT_FONT_ID } from '@/lib/fonts'
+import { getPersistedThemeId, type ThemeId } from '@/lib/themes'
 
 // ---------------------------------------------------------------------------
 // Store shape
@@ -64,6 +66,20 @@ interface AppStore {
   incrementLearned: (n?: number) => void
   /** Reset to zero (called at session start or midnight rollover). */
   resetDailyProgress: () => void
+
+  // ── Japanese font preference ───────────────────────────────────────────
+  /** Currently active font id (matches a FontOption.id from src/lib/fonts.ts). */
+  fontId: string
+  /** Set the active font id. Side effects (CSS var + localStorage) are handled
+   *  by the caller via persistAndApply() from src/lib/fonts.ts. */
+  setFontId: (id: string) => void
+
+  // ── Color theme preference ─────────────────────────────────────────────
+  /** Currently active theme id (matches a ThemeOption.id from src/lib/themes.ts). */
+  themeId: ThemeId
+  /** Set the active theme id. Side effects (CSS vars + localStorage) are
+   *  handled by the caller via persistAndApplyTheme() from src/lib/themes.ts. */
+  setThemeId: (id: ThemeId) => void
 }
 
 // ---------------------------------------------------------------------------
@@ -87,6 +103,18 @@ export const useAppStore = create<AppStore>((set) => ({
   incrementReviewed: (n = 1) => set((s) => ({ reviewedToday: s.reviewedToday + n })),
   incrementLearned: (n = 1) => set((s) => ({ learnedToday: s.learnedToday + n })),
   resetDailyProgress: () => set({ reviewedToday: 0, learnedToday: 0 }),
+
+  // ── Japanese font preference ───────────────────────────────────────────
+  // Initialise from localStorage so the picker shows the right selection
+  // on first render without needing an extra effect.
+  fontId: getPersistedFontId() ?? DEFAULT_FONT_ID,
+  setFontId: (id) => set({ fontId: id }),
+
+  // ── Color theme preference ─────────────────────────────────────────────
+  // Initialise from localStorage so the picker shows the right selection
+  // on first render without needing an extra effect.
+  themeId: getPersistedThemeId(),
+  setThemeId: (id) => set({ themeId: id }),
 }))
 
 // ---------------------------------------------------------------------------
@@ -117,4 +145,24 @@ export function useSessionQueue() {
     sessionMode: s.sessionMode,
     sessionQueue: s.sessionQueue,
   }))
+}
+
+/** Returns the current Japanese font preference id. */
+export function useFontId() {
+  return useAppStore((s) => s.fontId)
+}
+
+/** Returns the font id setter (stable function reference). */
+export function useSetFontId() {
+  return useAppStore((s) => s.setFontId)
+}
+
+/** Returns the current color theme preference id. */
+export function useThemeId() {
+  return useAppStore((s) => s.themeId)
+}
+
+/** Returns the theme id setter (stable function reference). */
+export function useSetThemeId() {
+  return useAppStore((s) => s.setThemeId)
 }

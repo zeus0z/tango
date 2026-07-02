@@ -20,6 +20,7 @@ import { toast } from 'sonner'
 
 import { supabase } from '@/lib/supabase'
 import { useAppStore, useAuthSession, useSetAuthSession } from '@/lib/store'
+import { t } from '@/lib/constants/strings'
 import { signOut as authSignOut } from './authService'
 
 // ---------------------------------------------------------------------------
@@ -31,17 +32,17 @@ import { signOut as authSignOut } from './authService'
  * Must be called once inside a component that is mounted for the app's lifetime
  * (e.g. AppAuthProvider). It subscribes to supabase.auth.onAuthStateChange and
  * syncs the Zustand store on every auth event.
+ *
+ * Uses only onAuthStateChange (not getSession first) to avoid the race
+ * condition on Google OAuth redirect — see ProtectedRoute in router.tsx for
+ * the full explanation.
  */
 export function useAuthListener() {
   const setAuthSession = useSetAuthSession()
 
   useEffect(() => {
-    // Resolve existing session on mount (handles page refresh)
-    supabase.auth.getSession().then(({ data }) => {
-      setAuthSession(data.session)
-    })
-
-    // Keep in sync with auth state changes
+    // Drive auth state from onAuthStateChange only.
+    // Fires INITIAL_SESSION (existing/null session) or SIGNED_IN (after OAuth).
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -80,7 +81,7 @@ export function useAuth() {
   async function logout() {
     const { error } = await authSignOut()
     if (error) {
-      toast.error('Sign out failed. Please try again.')
+      toast.error(t.auth.signOutError)
       return
     }
     navigate('/', { replace: true })

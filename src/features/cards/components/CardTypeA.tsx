@@ -17,7 +17,8 @@ import { AnswerFeedback, type FeedbackState } from './AnswerFeedback'
 import { MnemonicViewer } from './MnemonicViewer'
 import { RomajiGrid } from './RomajiGrid'
 import { cn } from '@/lib/utils'
-import { speakHiragana } from '../utils/speak'
+import { playKana } from '../utils/speak'
+import { t } from '@/lib/constants/strings'
 
 // ---------------------------------------------------------------------------
 // Props
@@ -54,14 +55,11 @@ export function CardTypeA({ card, onAnswer, revealed = false, onReveal, mnemonic
 
   function handleAnswer(correct: boolean) {
     setFeedback(correct ? 'correct' : 'wrong')
-  }
-
-  function handleAnimationComplete() {
-    if (feedback !== 'idle') {
-      // Feedback color intentionally stays — the session view controls
-      // when this card unmounts (after an explicit "Next" tap).
-      onAnswer(feedback === 'correct')
-    }
+    // Fire onAnswer immediately alongside the color change.
+    // Do NOT gate on onAnimationComplete — that 0.4–0.5s delay before the
+    // Next button appeared was the bug fixed by PER-39. The visual flash
+    // animation still runs; we just decouple it from downstream state.
+    onAnswer(correct)
   }
 
   return (
@@ -69,7 +67,6 @@ export function CardTypeA({ card, onAnswer, revealed = false, onReveal, mnemonic
       {/* ── Card face ─────────────────────────────────────────────────────── */}
       <AnswerFeedback
         feedback={feedback}
-        onAnimationComplete={handleAnimationComplete}
         onClick={!revealed ? onReveal : undefined}
         className={cn(
           'relative w-full rounded-3xl shadow-md',
@@ -82,10 +79,10 @@ export function CardTypeA({ card, onAnswer, revealed = false, onReveal, mnemonic
         {/* Speaker button — top-right, always visible on Type A */}
         <button
           type="button"
-          aria-label="Play pronunciation"
+          aria-label={t.common.playPronunciation}
           onClick={(e) => {
             e.stopPropagation()
-            speakHiragana(card.character)
+            playKana(card.character, card.romaji)
           }}
           className={cn(
             'absolute top-3 right-3',
@@ -118,7 +115,7 @@ export function CardTypeA({ card, onAnswer, revealed = false, onReveal, mnemonic
         >
           {showPrompt && (
             <p className="text-center text-sm text-muted-foreground">
-              Qual som ele faz?
+              {t.introduce.promptQuiz}
             </p>
           )}
           <RomajiGrid
@@ -144,12 +141,12 @@ export function CardTypeA({ card, onAnswer, revealed = false, onReveal, mnemonic
                 className="text-primary hover:text-primary/80 hover:bg-primary/10"
                 onClick={() => setMnemonicOpen((prev) => !prev)}
               >
-                💡 Show mnemonic
+                {t.common.showMnemonic}
               </Button>
               {mnemonicOpen && (
                 <MnemonicViewer
                   mnemonics={card.mnemonics_pt}
-                  romaji={card.romaji}
+                  keywords={card.mnemonic_keyword ?? undefined}
                   textClassName="text-muted-foreground px-1"
                 />
               )}
@@ -157,7 +154,7 @@ export function CardTypeA({ card, onAnswer, revealed = false, onReveal, mnemonic
           ) : (
             <MnemonicViewer
               mnemonics={card.mnemonics_pt}
-              romaji={card.romaji}
+              keywords={card.mnemonic_keyword ?? undefined}
               textClassName="text-muted-foreground px-1"
             />
           )}
