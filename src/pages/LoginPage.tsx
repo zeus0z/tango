@@ -13,7 +13,8 @@
  * Mobile-first: tap targets ≥48px, active: states, safe-area padding.
  */
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import Layout from '@/components/Layout'
@@ -22,6 +23,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 
 import { signInWithGoogle } from '@/features/auth/authService'
+import { useAuthSession } from '@/features/auth/useAuth'
 import { t } from '@/lib/constants/strings'
 
 // ---------------------------------------------------------------------------
@@ -62,6 +64,17 @@ function GoogleIcon() {
 
 export default function LoginPage() {
   const [googleLoading, setGoogleLoading] = useState(false)
+  const session = useAuthSession()
+  const navigate = useNavigate()
+
+  // Safety net for the OAuth-redirect race in ProtectedRoute (router.tsx):
+  // if a session ever ends up resolved while the user is stranded here,
+  // send them on to /home instead of leaving them looking logged out.
+  useEffect(() => {
+    if (session) {
+      navigate('/home', { replace: true })
+    }
+  }, [session, navigate])
 
   // ── Google OAuth ──────────────────────────────────────────────────────────
 

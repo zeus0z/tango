@@ -5,13 +5,27 @@
  * Single centered column on all breakpoints — sized to fit one viewport, no scroll.
  */
 
+import { useEffect } from 'react'
 import { Heart } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import PageTransition from '@/components/PageTransition'
 import { Button } from '@/components/ui/button'
 import { t } from '@/lib/constants/strings'
+import { useAuthSession } from '@/features/auth/useAuth'
 
 export default function LandingPage() {
+  const session = useAuthSession()
+  const navigate = useNavigate()
+
+  // Safety net for the OAuth-redirect race in ProtectedRoute (router.tsx):
+  // if a session ever ends up resolved while the user is stranded here,
+  // send them on to /home instead of leaving them looking logged out.
+  useEffect(() => {
+    if (session) {
+      navigate('/home', { replace: true })
+    }
+  }, [session, navigate])
+
   return (
     <PageTransition>
       {/*

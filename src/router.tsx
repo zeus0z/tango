@@ -103,6 +103,17 @@ function PageLoader() {
 // ---------------------------------------------------------------------------
 
 /**
+ * True if the current URL still carries an unprocessed OAuth redirect param
+ * (PKCE `?code=` or legacy implicit-flow `#access_token=`). Used to avoid
+ * treating a null session as final before Supabase finishes the async token
+ * exchange — see the race explained in the JSDoc below.
+ */
+function hasPendingOAuthParams() {
+  const { search, hash } = window.location
+  return search.includes('code=') || hash.includes('access_token=')
+}
+
+/**
  * Guards all routes that require an authenticated Supabase session.
  *
  * Auth resolution strategy:
@@ -121,6 +132,17 @@ function PageLoader() {
  * `onAuthStateChange` lets the Supabase client always be the source of truth —
  * it fires `INITIAL_SESSION` for existing sessions and `SIGNED_IN` after OAuth.
  *
+ * The same race can still happen with `onAuthStateChange` alone: the PKCE
+ * code exchange is an async network call, and on a slow connection the first
+ * `INITIAL_SESSION` event can fire with `session: null` before that exchange
+ * resolves. If we redirected to `/` on that first null, this component
+ * unmounts and unsubscribes — so the real `SIGNED_IN` event that arrives a
+ * moment later has nobody listening, and the user gets stranded on the
+ * public page despite having just signed in. When the URL still has pending
+ * OAuth params, we ignore exactly one leading null event and wait for the
+ * next one instead (an 8s timeout guards against the exchange failing
+ * outright, e.g. an expired/invalid code).
+ *
  * Seam for A1: A1 calls `setAuthSession` in `src/lib/store.ts` inside a
  * separate `onAuthStateChange` listener (via AppAuthProvider) to keep the
  * Zustand store in sync without restructuring this component.
@@ -129,14 +151,36 @@ function ProtectedRoute() {
   const [session, setSession] = useState<Session | null | undefined>(undefined)
 
   useEffect(() => {
+    const pendingOAuth = hasPendingOAuthParams()
+    let isFirstEvent = true
+    let settled = false
+
+    const timeoutId = pendingOAuth
+      ? window.setTimeout(() => {
+          if (!settled) {
+            settled = true
+            setSession(null)
+          }
+        }, 8000)
+      : undefined
+
     // Drive auth state from onAuthStateChange only — avoids the getSession()
     // race condition on OAuth redirect (see JSDoc above).
     // Fires INITIAL_SESSION (existing/null session) or SIGNED_IN (after OAuth).
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+      const skipLeadingNull = isFirstEvent && pendingOAuth && s === null
+      isFirstEvent = false
+      if (skipLeadingNull) return
+
+      settled = true
+      if (timeoutId) window.clearTimeout(timeoutId)
       setSession(s)
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      subscription.unsubscribe()
+      if (timeoutId) window.clearTimeout(timeoutId)
+    }
   }, [])
 
   // Waiting for the initial session check.
