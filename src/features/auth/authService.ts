@@ -22,21 +22,17 @@ export async function signInWithEmail(email: string, password: string) {
 }
 
 // ---------------------------------------------------------------------------
-// Google OAuth
+// Google Sign-In (Google Identity Services)
 // ---------------------------------------------------------------------------
 
 /**
- * Initiates Google OAuth sign-in.
- * The redirect URL must match the Supabase project dashboard configuration.
- * After the OAuth round-trip Supabase will call onAuthStateChange with the new session.
+ * Completes Google sign-in from a GIS ID token (see GoogleSignInButton).
+ * Runs entirely client-side — no redirect through Supabase's hosted domain.
+ * Supabase verifies the token against the Google provider's Client ID
+ * configured in the dashboard, then calls onAuthStateChange with the new session.
  */
-export async function signInWithGoogle() {
-  return supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: `${window.location.origin}/home`,
-    },
-  })
+export async function signInWithGoogleIdToken(idToken: string, nonce: string) {
+  return supabase.auth.signInWithIdToken({ provider: 'google', token: idToken, nonce })
 }
 
 // ---------------------------------------------------------------------------
