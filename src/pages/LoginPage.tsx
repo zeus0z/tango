@@ -83,7 +83,7 @@ export default function LoginPage() {
     try {
       const { error } = await signInWithGoogle()
       if (error) {
-        toast.error(error.message || t.auth.googleSignInError)
+        toast.error(t.auth.googleSignInError)
       }
       // On success the browser redirects; no further action needed here.
     } catch {

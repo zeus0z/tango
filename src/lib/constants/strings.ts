@@ -50,6 +50,7 @@ export const t = {
     continueWithGoogle: 'Continuar com o Google',
     googleSignInError: 'Falha ao entrar com o Google. Tente novamente.',
     genericError: 'Algo deu errado. Tente novamente.',
+    signOutError: 'Falha ao sair. Tente novamente.',
   },
 
   // ── Home ──────────────────────────────────────────────────────────────────
