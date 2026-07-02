@@ -2,7 +2,7 @@
 
 ## 1. Authentication
 
-- Supported methods: **Google OAuth** (primary) — **Email + Password** is temporarily disabled, see Implementation Notes below
+- Supported methods: **Google Sign-In** via Google Identity Services (primary) — **Email + Password** is temporarily disabled, see Implementation Notes below
 - All routes except `/` (landing page) require authentication
 - On first login, a user profile and progress record is created automatically
 - Auth state is managed via Supabase Auth and persisted via the Supabase JS client
@@ -174,11 +174,11 @@ A **secondary, optional** practice mode. Unlike spaced repetition (which surface
 
 > Reflects what is actually shipped. Specs above describe intent; this section records reality.
 
-### §1 Auth (PER-11, PER-33)
+### §1 Auth (PER-11, PER-33, and Google Identity Services migration)
 - `src/features/auth/` — `useAuth` hook + `AppAuthProvider` (mounted once between `ErrorBoundary` and the router in `App.tsx`) subscribe to `supabase.auth.onAuthStateChange` and sync the session into the Zustand auth slot.
-- `LoginPage` shows Google OAuth only — the tab toggle and email/password form are commented out in place (not deleted), pending a custom SMTP provider. See `docs/email-templates.md` "Future polish". Auth errors → sonner toast. On success: `navigate('/home')`.
-- Google OAuth uses `supabase.auth.signInWithOAuth({ provider: 'google' })`; the redirect URL is configured in the Supabase project, not in the client. The Google provider must be enabled in Supabase Dashboard → Authentication → Providers with a Google Cloud OAuth Client ID/Secret, and the consent screen must be published to **Production** (not Testing — Testing's 100-user allow-list blocks anyone not manually added).
-- **Auth resolution pattern (PER-33):** Both `ProtectedRoute` (routing gate) and `useAuthListener` (Zustand sync) use **only** `supabase.auth.onAuthStateChange` — no `getSession()` call. `onAuthStateChange` fires `INITIAL_SESSION` (cached session or null) or `SIGNED_IN` (after OAuth hash exchange), always after the Supabase client has finished processing the URL hash. Calling `getSession()` first raced against this async hash processing and caused the OAuth redirect to `/home` to immediately bounce back to `/` before the session was established.
+- `LoginPage` shows Google Sign-In only — the tab toggle and email/password form are commented out in place (not deleted), pending a custom SMTP provider. See `docs/email-templates.md` "Future polish". Auth errors → sonner toast. On success: the session appears via `onAuthStateChange` and a `useEffect` navigates to `/home`.
+- **Google sign-in uses Google Identity Services (GIS), not a Supabase OAuth redirect.** `GoogleSignInButton` (`src/features/auth/components/GoogleSignInButton.tsx`) loads `https://accounts.google.com/gsi/client`, renders Google's standard sign-in button via `google.accounts.id.renderButton`, and on success calls `supabase.auth.signInWithIdToken({ provider: 'google', token, nonce })` with the ID token GIS returns — entirely client-side, no redirect through `*.supabase.co`. This avoids the `<project-ref>.supabase.co` domain showing on Google's consent screen (the free alternative to Supabase's paid Custom Domains feature). The Google provider must still be **enabled** in Supabase Dashboard → Authentication → Providers → Google (same Client ID as `VITE_GOOGLE_CLIENT_ID`), since `signInWithIdToken` verifies the token's audience against it — but the consent screen no longer needs to be published to Production, since GoTrue's hosted `/authorize` redirect is never used.
+- **Auth resolution pattern (PER-33, simplified post-GIS):** Both `ProtectedRoute` (routing gate) and `useAuthListener` (Zustand sync) use **only** `supabase.auth.onAuthStateChange` — no `getSession()` call, to avoid a race with cached-session restoration on load. The OAuth-redirect-specific race handling (pending `?code=`/`#access_token=` detection, skip-one-null-event, 8s timeout) that existed for the old `signInWithOAuth` redirect flow was removed — GIS sign-in resolves the session synchronously in-page, so that race can no longer occur.
 - Profile + initial progress rows are created server-side by the `handle_new_user` trigger from D1.
 - shadcn `input.tsx` and `label.tsx` primitives were added by this issue.
 

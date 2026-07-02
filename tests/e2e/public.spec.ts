@@ -17,7 +17,10 @@ test.describe('public routes', () => {
   test('login page renders Google sign-in', async ({ page }) => {
     await page.goto('/login')
 
-    await expect(page.getByRole('heading', { name: /Welcome to Tango/i })).toBeVisible()
-    await expect(page.getByRole('button', { name: /Continue with Google/i })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /Bem-vindo ao Tango/i })).toBeVisible()
+    // The GIS button renders inside a cross-origin iframe, so it isn't
+    // reachable via getByRole from the top frame — assert the labeled
+    // container that hosts it instead.
+    await expect(page.getByLabel(/Continuar com o Google/i)).toBeVisible()
   })
 })
