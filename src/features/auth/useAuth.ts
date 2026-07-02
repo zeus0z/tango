@@ -20,6 +20,7 @@ import { toast } from 'sonner'
 
 import { supabase } from '@/lib/supabase'
 import { useAppStore, useAuthSession, useSetAuthSession } from '@/lib/store'
+import { t } from '@/lib/constants/strings'
 import { signOut as authSignOut } from './authService'
 
 // ---------------------------------------------------------------------------
@@ -80,7 +81,7 @@ export function useAuth() {
   async function logout() {
     const { error } = await authSignOut()
     if (error) {
-      toast.error('Sign out failed. Please try again.')
+      toast.error(t.auth.signOutError)
       return
     }
     navigate('/', { replace: true })

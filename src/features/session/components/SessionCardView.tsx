@@ -394,7 +394,7 @@ function ReviewSessionView({ initialQueue, userId, newCardIds }: ReviewSessionPr
         await persistReview(userId, currentCard.id, rating, cardProgress)
       } catch (err) {
         console.error('Failed to persist review:', err)
-        toast.error('Could not save review — check your connection.')
+        toast.error(t.session.couldNotSaveReview)
       }
 
       const isNew = newCardIds.has(currentCard.id)

@@ -68,7 +68,7 @@ export default defineConfig({
       manifest: {
         name: 'Tango',
         short_name: 'Tango',
-        description: 'Learn Japanese hiragana and katakana with spaced repetition',
+        description: 'Aprenda hiragana e katakana com repetição espaçada',
         theme_color: '#6366f1',
         background_color: '#0f0f11',
         display: 'standalone',
