@@ -1,5 +1,5 @@
 /**
- * SessionModeSelector — three buttons that start a study session.
+ * SessionModeSelector — two buttons that start a study session.
  *
  * Mode handoff contract: React Router location state.
  * On tap, navigates to '/session' with { state: { mode: SessionMode } }.
@@ -9,8 +9,7 @@
  * keeping Zustand for persistent/shared state only.
  *
  * Modes (per docs/FEATURES.md §3):
- *   learn        — 5 new cards + all due today
- *   review-recent — cards introduced in the last 7 days that are due
+ *   learn        — 5 new cards, teaching only
  *   review-all   — every card due today (full FSRS history)
  */
 
@@ -43,14 +42,6 @@ const MODES: ModeConfig[] = [
     description: t.sessionMode.learnDescription,
     colourClass:
       'bg-green-50 border-green-200 text-green-900 active:bg-green-100',
-  },
-  {
-    mode: 'review-recent',
-    emoji: '🔁',
-    label: t.sessionMode.reviewRecentLabel,
-    description: t.sessionMode.reviewRecentDescription,
-    colourClass:
-      'bg-amber-50 border-amber-200 text-amber-900 active:bg-amber-100',
   },
   {
     mode: 'review-all',

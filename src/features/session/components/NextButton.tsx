@@ -2,8 +2,8 @@
  * NextButton — single CTA shown after an answer's feedback has been marked.
  *
  * Used everywhere an answer needs explicit acknowledgement before advancing:
- * Learn mode (both outcomes), Review Recent/All's wrong-answer path, and
- * Infinite Review (both outcomes). Review Recent/All's correct-answer path
+ * Learn mode (both outcomes), Review All's wrong-answer path, and
+ * Infinite Review (both outcomes). Review All's correct-answer path
  * uses RatingButtons instead.
  */
 

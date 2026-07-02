@@ -90,10 +90,8 @@ export const t = {
   sessionMode: {
     heading: 'Iniciar uma sessão',
     learnLabel: 'Aprender',
-    learnDescription: '5 novos + vencidos hoje',
+    learnDescription: '5 novos cartões',
     learnTip: 'Faça isso diariamente para se tornar fluente em japonês.',
-    reviewRecentLabel: 'Revisar recentes',
-    reviewRecentDescription: 'Últimos 7 dias, vencidos agora',
     reviewAllLabel: 'Revisar tudo',
     reviewAllDescription: 'Todos os vencidos hoje',
     infiniteLabel: 'Revisão infinita',

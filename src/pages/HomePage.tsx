@@ -6,7 +6,7 @@
  *   2. Milestone banner (conditional) — "You completed the X group!"
  *   3. Daily goal tracker — "X / 5 learned today" with progress bar
  *   4. Alphabet progress map — grid of all 46 hiragana, colour-coded by mastery
- *   5. Session mode selector — Learn / Review Recent / Review All buttons
+ *   5. Session mode selector — Learn / Review All buttons
  *
  * Data:
  *   - learnedToday: count of distinct correct reviews today (UTC day)

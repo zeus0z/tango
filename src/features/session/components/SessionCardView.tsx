@@ -5,7 +5,7 @@
  *  - Teaching mode (learn): receives a TeachingItem[] plan and renders
  *    IntroduceCharacter screens or CardTypeA/B drills per item kind.
  *    Handles requeue logic for wrong answers.
- *  - Legacy card mode (review-recent, review-all): receives a flat Card[]
+ *  - Legacy card mode (review-all): receives a flat Card[]
  *    and runs the original FSRS-driven loop.
  *
  * FSRS scheduling + Supabase persistence runs on every rating via persistReview.
@@ -306,7 +306,7 @@ function TeachingSessionView({ teachingPlan, userId }: TeachingSessionProps) {
 }
 
 // ===========================================================================
-// Review session (review-recent / review-all — original behaviour)
+// Review session (review-all — original behaviour)
 // ===========================================================================
 
 function ReviewSessionView({ initialQueue, userId, newCardIds }: ReviewSessionProps) {
