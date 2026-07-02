@@ -18,9 +18,7 @@ export {
   useLearntScriptCounts,
 } from './hooks/useSessionQueue'
 export {
-  buildLearnQueue,
   buildLearnTeachingQueue,
-  buildReviewRecentQueue,
   buildReviewAllQueue,
   buildInfiniteReviewQueue,
   fetchLearntScriptCounts,

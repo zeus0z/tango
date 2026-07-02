@@ -26,15 +26,14 @@ Shown after login. Displays:
 - **Alphabet progress map**: grid of all hiragana characters, each cell colour-coded by mastery state
   - Unseen (grey), Learning (yellow), Review (blue), Mastered (green)
 - **Milestones**: contextual banners, e.g. "You completed the vowel group!"
-- **Session mode selector**: three spaced-repetition buttons to start a session, plus a separate **Infinite Review** button
+- **Session mode selector**: two spaced-repetition buttons to start a session, plus a separate **Infinite Review** button
   - A small **green note** sits under the 🌱 Learn button: _"Do this daily to become fluent in Japanese."_ — daily spaced repetition is the primary path; Infinite Review is optional practice.
 - Tapping the avatar navigates to the **Account page** (see §3.5) — it is not a dropdown menu.
 
 ### Session Modes
 | Mode | Description |
 |---|---|
-| 🌱 Learn | 5 new cards (Genki order) + all cards due today via FSRS |
-| 🔁 Review Recent | Only cards introduced in the last 7 days that are due |
+| 🌱 Learn | 5 new cards (Genki order) — new-character teaching only, no due reviews mixed in |
 | 📚 Review All | Every card due today based on full FSRS history |
 | ♾️ Infinite Review | Endless practice of all learnt cards of one script — opens a setup screen first (see §5.5). Practice-only, does **not** touch FSRS. |
 
@@ -92,7 +91,7 @@ Preference is **local to the device** (localStorage), not synced across devices 
    - **Correct, Learn mode**: silently auto-rated **Good** in the background (Learn
      mode never asks the user to judge difficulty — that's a Review-mode concern) —
      just a **Next** button
-   - **Correct, Review Recent / Review All**: show 3 rating buttons — **Hard**,
+   - **Correct, Review All**: show 3 rating buttons — **Hard**,
      **Good**, **Easy** — picking one both rates and advances
    - **Correct or wrong, Infinite Review**: just a **Next** button either way — this
      mode never rates or persists anything (see §5.5)
@@ -211,13 +210,13 @@ A **secondary, optional** practice mode. Unlike spaced repetition (which surface
 - Option order: CardTypeB shuffles correct + 5 distractors with `Math.random()` on every mount (not seeded by `card.id`) — the same card shows a different tile layout every time it's presented.
 
 ### §5 Session (PER-14)
-- Queue builders in `src/features/session/utils/buildSession.ts` (Learn / Review Recent / Review All) hit Supabase directly per the "Session Building Logic" section of `docs/DATABASE.md`. New-first merge for Learn mode.
+- Queue builders in `src/features/session/utils/buildSession.ts` (Learn / Review All) hit Supabase directly per the "Session Building Logic" section of `docs/DATABASE.md`. Learn mode is new-character teaching only — it no longer merges in FSRS-due cards.
 - `persistReview.ts` runs `ts-fsrs.repeat()`, persists the full FSRS card state to `user_card_progress`, and appends a `review_logs` row. `was_correct` is `true` for Hard/Good/Easy and `false` for Again. Maps ts-fsrs `State` enum ↔ DB string.
 - Card-type selection: Type A for unseen/Learning cards (recognition); Type B for Review (recall).
 - Wrong answers auto-rate `Again` and requeue at the END of the queue, so the user re-sees them before the session ends — the requeue/advance is now deferred to an explicit `NextButton` tap rather than firing automatically.
 - **Learn mode never shows rating buttons.** `TeachingSessionView` auto-rates every correct drill answer `Good` (no user choice) and every wrong one `Again` (unchanged), then shows `NextButton` either way. `RatingButtons.tsx` is not imported here at all.
-- Rating buttons (`RatingButtons.tsx`): Hard (amber, secondary) / **Good (primary, ≥56px, flex-2)** / Easy (blue) — used **only** by `ReviewSessionView`'s correct-answer path (Review Recent / Review All). Its wrong-answer path uses `NextButton` like everywhere else.
-- `NextButton.tsx`: single CTA, styled like `IntroduceCharacter`'s "Got it →" button. Used for: Learn mode (both outcomes), Review Recent/All's wrong-answer path, and Infinite Review (both outcomes, see §5.5).
+- Rating buttons (`RatingButtons.tsx`): Hard (amber, secondary) / **Good (primary, ≥56px, flex-2)** / Easy (blue) — used **only** by `ReviewSessionView`'s correct-answer path (Review All). Its wrong-answer path uses `NextButton` like everywhere else.
+- `NextButton.tsx`: single CTA, styled like `IntroduceCharacter`'s "Got it →" button. Used for: Learn mode (both outcomes), Review All's wrong-answer path, and Infinite Review (both outcomes, see §5.5).
 - Summary screen derives counters from session-local state, then "return home" → `/home`.
 - Session-internal state (queue, queue index, daily counters) lives in the Zustand `studySession` + `dailyProgress` slots.
 

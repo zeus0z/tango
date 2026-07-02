@@ -2,7 +2,7 @@
  * useSessionQueue.ts — TanStack Query hooks to build the session card queue.
  *
  * Two hooks:
- *  - useSessionQueueQuery: returns a flat Card[] for review-recent / review-all.
+ *  - useSessionQueueQuery: returns a flat Card[] for review-all.
  *  - useTeachingPlanQuery: returns TeachingItem[] for the learn mode teaching loop.
  *
  * Queries Supabase via buildSession utils based on the chosen session mode.
@@ -13,8 +13,6 @@ import type { SessionMode, ScriptType, Card } from '@/types'
 import type { TeachingItem } from '../utils/buildSession'
 import {
   buildLearnTeachingQueue,
-  buildLearnQueue,
-  buildReviewRecentQueue,
   buildReviewAllQueue,
   buildInfiniteReviewQueue,
   fetchLearntScriptCounts,
@@ -26,20 +24,16 @@ interface UseSessionQueueOptions {
   enabled?: boolean
 }
 
-/** Returns flat Card[] — used for review-recent / review-all modes. */
+/** Returns flat Card[] — used for review-all mode. */
 export function useSessionQueueQuery({ userId, mode, enabled = true }: UseSessionQueueOptions) {
   return useQuery<Card[], Error>({
     queryKey: ['session', 'queue', userId, mode],
     queryFn: () => {
       switch (mode) {
-        case 'learn':
-          return buildLearnQueue(userId)
-        case 'review-recent':
-          return buildReviewRecentQueue(userId)
         case 'review-all':
           return buildReviewAllQueue(userId)
         default:
-          // 'infinite-review' has its own hook (useInfiniteReviewQueue).
+          // 'learn' and 'infinite-review' each have their own dedicated hook.
           throw new Error(`useSessionQueueQuery does not handle mode: ${mode}`)
       }
     },
