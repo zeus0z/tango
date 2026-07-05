@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import {
   createBrowserRouter,
   RouterProvider,
@@ -7,8 +7,7 @@ import {
   useRouteError,
   isRouteErrorResponse,
 } from 'react-router-dom'
-import type { Session } from '@supabase/supabase-js'
-import { supabase } from '@/lib/supabase'
+import { useAuthSession, useIsSessionResolved } from '@/lib/store'
 import { reportError } from '@/lib/errorReporter'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -106,46 +105,34 @@ function PageLoader() {
  * Guards all routes that require an authenticated Supabase session.
  *
  * Auth resolution strategy:
- * - Drive auth state from a single `onAuthStateChange` subscription only.
- * - Initialise session as `undefined` (loading) and update on the first event
- *   (`INITIAL_SESSION`, `SIGNED_IN`, or `SIGNED_OUT`).
- * - Show a loading indicator until the first event fires.
+ * - Read `session` + `sessionResolved` from the Zustand store, which is kept
+ *   in sync by the single `onAuthStateChange` subscription in `useAuthListener`
+ *   (src/features/auth/useAuth.ts), mounted once at app boot via AppAuthProvider.
+ * - Show a loading indicator until `sessionResolved` is true.
  * - If unauthenticated → redirect to `/`.
  *
- * Why NOT `getSession()` first: `onAuthStateChange` is the single source of
- * truth for session state — it fires `INITIAL_SESSION` for a cached session
- * (or null) as soon as the client has checked storage. Calling `getSession()`
- * separately would just be a second, redundant read of the same state.
- *
- * (Previously this also guarded against a race with the Google OAuth
- * redirect's async PKCE code exchange — see PER-33 in docs/FEATURES.md. That
- * redirect flow was removed in favor of Google Identity Services, which
- * resolves the session synchronously in-page, so the race can no longer
- * happen and the redirect-param handling was removed.)
- *
- * Seam for A1: A1 calls `setAuthSession` in `src/lib/store.ts` inside a
- * separate `onAuthStateChange` listener (via AppAuthProvider) to keep the
- * Zustand store in sync without restructuring this component.
+ * This component used to maintain its own, independent `onAuthStateChange`
+ * subscription. That subscription was created fresh every time this layout
+ * route mounted — i.e. exactly when navigating here right after sign-in — and
+ * a brand-new subscriber's first event can be delivered before the
+ * just-created session is visible to it (GoTrueClient queues it behind an
+ * internal lock). That caused an intermittent bounce back to `/` on the
+ * first Google sign-in attempt (a second attempt always worked, since by
+ * then there was no lock contention left). Reading from the store instead
+ * means there's only ever one subscription — already alive since app boot,
+ * well before any sign-in starts — so there's no fresh-subscriber race.
  */
 function ProtectedRoute() {
-  const [session, setSession] = useState<Session | null | undefined>(undefined)
-
-  useEffect(() => {
-    // Fires INITIAL_SESSION (cached session or null) then SIGNED_IN/SIGNED_OUT.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
-      setSession(s)
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
+  const session = useAuthSession()
+  const sessionResolved = useIsSessionResolved()
 
   // Waiting for the initial session check.
-  if (session === undefined) {
+  if (!sessionResolved) {
     return <PageLoader />
   }
 
   // Not authenticated — redirect to landing page.
-  if (session === null) {
+  if (!session) {
     return <Navigate to="/" replace />
   }
 
