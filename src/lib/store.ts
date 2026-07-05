@@ -6,9 +6,10 @@
  *
  * Slots:
  * ─────────────────────────────────────────────────────────────────────────────
- * auth          — Supabase session. A1 (auth feature) will call `setAuthSession`
- *                 inside `supabase.auth.onAuthStateChange` to populate this slot.
- *                 ProtectedRoute reads `session` to gate access.
+ * auth          — Supabase session. `useAuthListener` (src/features/auth/useAuth.ts)
+ *                 calls `setAuthSession` inside its single `supabase.auth.onAuthStateChange`
+ *                 subscription to populate `session` + `sessionResolved`.
+ *                 ProtectedRoute reads both to gate access.
  *
  * sessionMode   — Which study mode the user picked on the home screen.
  * sessionQueue  — Ordered list of card IDs queued for the current session.
@@ -32,10 +33,16 @@ import { getPersistedThemeId, type ThemeId } from '@/lib/themes'
 
 interface AppStore {
   // ── Auth ──────────────────────────────────────────────────────────────────
-  /** Current Supabase session — null means logged-out or not yet resolved. */
+  /** Current Supabase session — null means logged-out (or not yet resolved). */
   session: Session | null
   /**
-   * Called by A1 inside supabase.auth.onAuthStateChange.
+   * True once the single onAuthStateChange listener (useAuthListener) has
+   * fired at least once (INITIAL_SESSION, SIGNED_IN, or SIGNED_OUT).
+   * ProtectedRoute uses this to distinguish "still loading" from "logged out".
+   */
+  sessionResolved: boolean
+  /**
+   * Called by useAuthListener inside supabase.auth.onAuthStateChange.
    * Example:
    *   supabase.auth.onAuthStateChange((_event, session) => setAuthSession(session))
    */
@@ -89,7 +96,8 @@ interface AppStore {
 export const useAppStore = create<AppStore>((set) => ({
   // ── Auth ──────────────────────────────────────────────────────────────────
   session: null,
-  setAuthSession: (session) => set({ session }),
+  sessionResolved: false,
+  setAuthSession: (session) => set({ session, sessionResolved: true }),
 
   // ── Study session ─────────────────────────────────────────────────────────
   sessionMode: null,
@@ -129,6 +137,11 @@ export function useAuthSession() {
 /** Returns the auth session setter. Wire into onAuthStateChange in A1. */
 export function useSetAuthSession() {
   return useAppStore((s) => s.setAuthSession)
+}
+
+/** True once the auth listener has fired at least once (see `sessionResolved`). */
+export function useIsSessionResolved() {
+  return useAppStore((s) => s.sessionResolved)
 }
 
 /** Returns daily progress counters. */
