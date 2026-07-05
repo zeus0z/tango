@@ -85,7 +85,7 @@ export interface ReviewLog {
 export type MasteryState = 'Unseen' | 'Learning' | 'Review' | 'Mastered'
 
 /** Study session mode selected by the user on the home screen. */
-export type SessionMode = 'learn' | 'review-recent' | 'review-all' | 'infinite-review'
+export type SessionMode = 'learn' | 'review-all' | 'infinite-review'
 
 /** Writing script a card belongs to — also used to filter Infinite Review. */
 export type ScriptType = Card['type']

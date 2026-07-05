@@ -139,11 +139,8 @@ Run in `src/lib/session.ts`. Queries Supabase directly.
 1. Fetch cards from `cards` table ordered by `genki_order`
 2. Exclude cards that already have a row in `user_card_progress` for this user
 3. Take the next 5 unseen cards
-4. Fetch all `user_card_progress` rows where `due <= now()` for this user
-5. Merge: new cards first, then due reviews
 
-### Review Recent Mode
-- `user_card_progress` where `due <= now()` AND `last_review >= now() - interval '7 days'`
+New-character teaching only — no FSRS-due cards are merged in. Due reviews surface exclusively via Review All Mode.
 
 ### Review All Mode
 - `user_card_progress` where `due <= now()`

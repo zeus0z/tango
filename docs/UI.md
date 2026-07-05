@@ -171,7 +171,7 @@ Keep toasts brief, non-blocking, and auto-dismissed after 3 seconds.
   - Wrong: `backgroundColor: ['#ffffff', '#fee2e2']` red flash (holds on red) AND `x: [0, -8, 8, -8, 8, 0]` horizontal shake.
   - The hold is intentional: `onAnswer` fires when the hold begins, but advancing to the next card/item always waits for a `NextButton` tap — no card surface auto-advances.
 - **Tap target sizing actually enforced in shipped code:**
-  - Session rating buttons: ≥56px height. Good (primary) is visually dominant via `flex-2`. Used only by Review Recent/All's correct-answer path.
+  - Session rating buttons: ≥56px height. Good (primary) is visually dominant via `flex-2`. Used only by Review All's correct-answer path.
   - `NextButton`: ≥56px height, same styling as `IntroduceCharacter`'s "Got it →" CTA. Used everywhere else an answer needs acknowledging.
   - Session mode buttons on /home: ≥56px tall, full-width.
   - Weak cards / list rows: ≥48px.

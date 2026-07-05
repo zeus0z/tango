@@ -3,13 +3,16 @@
  *
  * Responsibilities:
  * 1. Subscribe to supabase.auth.onAuthStateChange once (at app boot via AppAuthProvider).
- * 2. Keep the Zustand store's `session` slot in sync via `setAuthSession`.
+ * 2. Keep the Zustand store's `session` + `sessionResolved` slots in sync via `setAuthSession`.
  * 3. Expose convenience selectors + action helpers to consuming components.
  *
  * Important:
- * - ProtectedRoute in router.tsx already maintains its own local session state
- *   for routing decisions; useAuth keeps the Zustand slot in sync for features
- *   that read `session` from the store (e.g. displaying the user's name/email).
+ * - This is the ONLY `onAuthStateChange` subscription in the app. ProtectedRoute
+ *   in router.tsx reads `session`/`sessionResolved` from the Zustand store rather
+ *   than subscribing itself — a second, independent subscription there used to
+ *   cause an intermittent bounce back to `/` right after sign-in (see router.tsx
+ *   for the full explanation), since a freshly-created subscriber's first event
+ *   can race a just-completed sign-in.
  * - The subscription is established once inside AppAuthProvider (src/features/auth/AppAuthProvider.tsx)
  *   which is mounted near the root. Components call useAuth() to get the derived values.
  */
@@ -19,7 +22,7 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { supabase } from '@/lib/supabase'
-import { useAppStore, useAuthSession, useSetAuthSession } from '@/lib/store'
+import { useAppStore, useAuthSession, useIsSessionResolved, useSetAuthSession } from '@/lib/store'
 import { t } from '@/lib/constants/strings'
 import { signOut as authSignOut } from './authService'
 
@@ -33,9 +36,8 @@ import { signOut as authSignOut } from './authService'
  * (e.g. AppAuthProvider). It subscribes to supabase.auth.onAuthStateChange and
  * syncs the Zustand store on every auth event.
  *
- * Uses only onAuthStateChange (not getSession first) to avoid the race
- * condition on Google OAuth redirect — see ProtectedRoute in router.tsx for
- * the full explanation.
+ * Uses only onAuthStateChange (not getSession first) — see ProtectedRoute in
+ * router.tsx for the full explanation.
  */
 export function useAuthListener() {
   const setAuthSession = useSetAuthSession()
@@ -70,12 +72,10 @@ export interface UseAuthReturn {
 
 export function useAuth() {
   const session = useAuthSession()
+  const sessionResolved = useIsSessionResolved()
   const navigate = useNavigate()
 
-  // session is null after store initialises (never undefined in Zustand)
-  // We can consider session 'loading' only before the listener fires, but since
-  // the store initialises to null we treat null as "logged out" here.
-  const isLoading = false
+  const isLoading = !sessionResolved
   const user = session?.user ?? null
 
   async function logout() {

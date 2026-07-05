@@ -2,7 +2,7 @@
 
 ## 1. Authentication
 
-- Supported methods: **Google OAuth** (primary) — **Email + Password** is temporarily disabled, see Implementation Notes below
+- Supported methods: **Google Sign-In** via Google Identity Services (primary) — **Email + Password** is temporarily disabled, see Implementation Notes below
 - All routes except `/` (landing page) require authentication
 - On first login, a user profile and progress record is created automatically
 - Auth state is managed via Supabase Auth and persisted via the Supabase JS client
@@ -26,15 +26,14 @@ Shown after login. Displays:
 - **Alphabet progress map**: grid of all hiragana characters, each cell colour-coded by mastery state
   - Unseen (grey), Learning (yellow), Review (blue), Mastered (green)
 - **Milestones**: contextual banners, e.g. "You completed the vowel group!"
-- **Session mode selector**: three spaced-repetition buttons to start a session, plus a separate **Infinite Review** button
+- **Session mode selector**: two spaced-repetition buttons to start a session, plus a separate **Infinite Review** button
   - A small **green note** sits under the 🌱 Learn button: _"Do this daily to become fluent in Japanese."_ — daily spaced repetition is the primary path; Infinite Review is optional practice.
 - Tapping the avatar navigates to the **Account page** (see §3.5) — it is not a dropdown menu.
 
 ### Session Modes
 | Mode | Description |
 |---|---|
-| 🌱 Learn | 5 new cards (Genki order) + all cards due today via FSRS |
-| 🔁 Review Recent | Only cards introduced in the last 7 days that are due |
+| 🌱 Learn | 5 new cards (Genki order) — new-character teaching only, no due reviews mixed in |
 | 📚 Review All | Every card due today based on full FSRS history |
 | ♾️ Infinite Review | Endless practice of all learnt cards of one script — opens a setup screen first (see §5.5). Practice-only, does **not** touch FSRS. |
 
@@ -92,7 +91,7 @@ Preference is **local to the device** (localStorage), not synced across devices 
    - **Correct, Learn mode**: silently auto-rated **Good** in the background (Learn
      mode never asks the user to judge difficulty — that's a Review-mode concern) —
      just a **Next** button
-   - **Correct, Review Recent / Review All**: show 3 rating buttons — **Hard**,
+   - **Correct, Review All**: show 3 rating buttons — **Hard**,
      **Good**, **Easy** — picking one both rates and advances
    - **Correct or wrong, Infinite Review**: just a **Next** button either way — this
      mode never rates or persists anything (see §5.5)
@@ -174,11 +173,11 @@ A **secondary, optional** practice mode. Unlike spaced repetition (which surface
 
 > Reflects what is actually shipped. Specs above describe intent; this section records reality.
 
-### §1 Auth (PER-11, PER-33)
+### §1 Auth (PER-11, PER-33, and Google Identity Services migration)
 - `src/features/auth/` — `useAuth` hook + `AppAuthProvider` (mounted once between `ErrorBoundary` and the router in `App.tsx`) subscribe to `supabase.auth.onAuthStateChange` and sync the session into the Zustand auth slot.
-- `LoginPage` shows Google OAuth only — the tab toggle and email/password form are commented out in place (not deleted), pending a custom SMTP provider. See `docs/email-templates.md` "Future polish". Auth errors → sonner toast. On success: `navigate('/home')`.
-- Google OAuth uses `supabase.auth.signInWithOAuth({ provider: 'google' })`; the redirect URL is configured in the Supabase project, not in the client. The Google provider must be enabled in Supabase Dashboard → Authentication → Providers with a Google Cloud OAuth Client ID/Secret, and the consent screen must be published to **Production** (not Testing — Testing's 100-user allow-list blocks anyone not manually added).
-- **Auth resolution pattern (PER-33):** Both `ProtectedRoute` (routing gate) and `useAuthListener` (Zustand sync) use **only** `supabase.auth.onAuthStateChange` — no `getSession()` call. `onAuthStateChange` fires `INITIAL_SESSION` (cached session or null) or `SIGNED_IN` (after OAuth hash exchange), always after the Supabase client has finished processing the URL hash. Calling `getSession()` first raced against this async hash processing and caused the OAuth redirect to `/home` to immediately bounce back to `/` before the session was established.
+- `LoginPage` shows Google Sign-In only — the tab toggle and email/password form are commented out in place (not deleted), pending a custom SMTP provider. See `docs/email-templates.md` "Future polish". Auth errors → sonner toast. On success: the session appears via `onAuthStateChange` and a `useEffect` navigates to `/home`.
+- **Google sign-in uses Google Identity Services (GIS), not a Supabase OAuth redirect.** `GoogleSignInButton` (`src/features/auth/components/GoogleSignInButton.tsx`) loads `https://accounts.google.com/gsi/client`, renders Google's standard sign-in button via `google.accounts.id.renderButton`, and on success calls `supabase.auth.signInWithIdToken({ provider: 'google', token, nonce })` with the ID token GIS returns — entirely client-side, no redirect through `*.supabase.co`. This avoids the `<project-ref>.supabase.co` domain showing on Google's consent screen (the free alternative to Supabase's paid Custom Domains feature). The Google provider must still be **enabled** in Supabase Dashboard → Authentication → Providers → Google (same Client ID as `VITE_GOOGLE_CLIENT_ID`), since `signInWithIdToken` verifies the token's audience against it — but the consent screen no longer needs to be published to Production, since GoTrue's hosted `/authorize` redirect is never used.
+- **Auth resolution pattern (PER-33, revised — single subscription):** There is exactly **one** `supabase.auth.onAuthStateChange` subscription in the app, owned by `useAuthListener` (mounted once at boot via `AppAuthProvider`), which writes `session` + `sessionResolved` into the Zustand store — no `getSession()` call, to avoid a race with cached-session restoration on load. `ProtectedRoute` reads that store state rather than subscribing itself. It used to maintain its own, independent `onAuthStateChange` subscription, created fresh every time the protected layout mounted (i.e. right after sign-in navigates there); a brand-new subscriber's first event can be delivered before a just-completed sign-in's session is visible to it, which caused an intermittent bounce back to `/` on the first Google sign-in attempt (a second attempt always worked, since lock contention had settled by then). The OAuth-redirect-specific race handling (pending `?code=`/`#access_token=` detection, skip-one-null-event, 8s timeout) that existed for the old `signInWithOAuth` redirect flow is still correctly removed — GIS resolves the credential synchronously in-page — but that's a separate concern from the fresh-subscriber race above, which is generic to `onAuthStateChange` and was fixed by consolidating to a single subscription instead.
 - Profile + initial progress rows are created server-side by the `handle_new_user` trigger from D1.
 - shadcn `input.tsx` and `label.tsx` primitives were added by this issue.
 
@@ -211,13 +210,13 @@ A **secondary, optional** practice mode. Unlike spaced repetition (which surface
 - Option order: CardTypeB shuffles correct + 5 distractors with `Math.random()` on every mount (not seeded by `card.id`) — the same card shows a different tile layout every time it's presented.
 
 ### §5 Session (PER-14)
-- Queue builders in `src/features/session/utils/buildSession.ts` (Learn / Review Recent / Review All) hit Supabase directly per the "Session Building Logic" section of `docs/DATABASE.md`. New-first merge for Learn mode.
+- Queue builders in `src/features/session/utils/buildSession.ts` (Learn / Review All) hit Supabase directly per the "Session Building Logic" section of `docs/DATABASE.md`. Learn mode is new-character teaching only — it no longer merges in FSRS-due cards.
 - `persistReview.ts` runs `ts-fsrs.repeat()`, persists the full FSRS card state to `user_card_progress`, and appends a `review_logs` row. `was_correct` is `true` for Hard/Good/Easy and `false` for Again. Maps ts-fsrs `State` enum ↔ DB string.
 - Card-type selection: Type A for unseen/Learning cards (recognition); Type B for Review (recall).
 - Wrong answers auto-rate `Again` and requeue at the END of the queue, so the user re-sees them before the session ends — the requeue/advance is now deferred to an explicit `NextButton` tap rather than firing automatically.
 - **Learn mode never shows rating buttons.** `TeachingSessionView` auto-rates every correct drill answer `Good` (no user choice) and every wrong one `Again` (unchanged), then shows `NextButton` either way. `RatingButtons.tsx` is not imported here at all.
-- Rating buttons (`RatingButtons.tsx`): Hard (amber, secondary) / **Good (primary, ≥56px, flex-2)** / Easy (blue) — used **only** by `ReviewSessionView`'s correct-answer path (Review Recent / Review All). Its wrong-answer path uses `NextButton` like everywhere else.
-- `NextButton.tsx`: single CTA, styled like `IntroduceCharacter`'s "Got it →" button. Used for: Learn mode (both outcomes), Review Recent/All's wrong-answer path, and Infinite Review (both outcomes, see §5.5).
+- Rating buttons (`RatingButtons.tsx`): Hard (amber, secondary) / **Good (primary, ≥56px, flex-2)** / Easy (blue) — used **only** by `ReviewSessionView`'s correct-answer path (Review All). Its wrong-answer path uses `NextButton` like everywhere else.
+- `NextButton.tsx`: single CTA, styled like `IntroduceCharacter`'s "Got it →" button. Used for: Learn mode (both outcomes), Review All's wrong-answer path, and Infinite Review (both outcomes, see §5.5).
 - Summary screen derives counters from session-local state, then "return home" → `/home`.
 - Session-internal state (queue, queue index, daily counters) lives in the Zustand `studySession` + `dailyProgress` slots.
 

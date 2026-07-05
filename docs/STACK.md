@@ -31,7 +31,10 @@ All env vars are prefixed with `VITE_` for Vite compatibility.
 ```
 VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=
+VITE_GOOGLE_CLIENT_ID=
 ```
+
+`VITE_GOOGLE_CLIENT_ID` is the Google Cloud OAuth Client ID used by Google Identity Services (GIS) for client-side Google sign-in — same value as the Client ID configured in Supabase Dashboard → Authentication → Providers → Google. It's public (not a secret) and safe to expose in the client bundle.
 
 Never commit `.env`. Always use `.env.local` for local development.
 A `.env.example` must be kept up to date at the project root.
@@ -72,6 +75,7 @@ Use Node 20 LTS. Pin version in `.nvmrc`.
 - **Installed versions (build targets these):** React 19, Vite 8, React Router 7, TypeScript 6, Tailwind 3.4. CI runs on Node 22. Treat the older numbers in the table above as historical.
 - **Data access (MVP):** feature code uses the **Supabase JS client directly**. The Axios 3-layer in `CODE_PRACTICES.md` is scaffolded for the *future* AI backend only.
 - **Supabase client** (PER-2): singleton in `src/lib/supabase.ts`; env typed in `src/vite-env.d.ts`; `.env.example` at repo root.
+- **Google Identity Services (GIS)**: loaded at runtime via a script tag (`https://accounts.google.com/gsi/client`), not an npm runtime dependency. `@types/google-one-tap` is a **devDependency only** (DefinitelyTyped, zero runtime code), providing TypeScript types for `window.google.accounts.id`. See `src/features/auth/components/GoogleSignInButton.tsx`.
 - **Path alias** (PER-1): `@/` → `src` configured in `vite.config.ts` + `tsconfig.app.json`.
 - **Design system** (PER-1): tokens in `tailwind.config.ts` + CSS variables in `src/index.css`; shadcn/ui base components in `src/components/ui/`. `Toaster` uses **sonner** (React 19-compatible) rather than the legacy Radix toast.
 - **PWA**: `vite-plugin-pwa` emits `sw.js` + manifest at build (full manifest/icons/offline tuning tracked in PER-5). As of MVP completion: 28 precache entries (~875 KiB).
