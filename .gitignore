@@ -25,6 +25,7 @@ supabase/.branches
 /playwright-report
 /playwright/.cache
 /screenshots
+/.playwright-mcp
 
 # Vitest
 /coverage
