@@ -20,11 +20,15 @@ export default function LandingPage() {
   // Safety net for the OAuth-redirect race in ProtectedRoute (router.tsx):
   // if a session ever ends up resolved while the user is stranded here,
   // send them on to /home instead of leaving them looking logged out.
+  // Depend on the user id (a stable primitive), not the session object —
+  // setAuthSession stores a new Session reference on every auth event, which
+  // would otherwise re-run this effect and re-navigate on every one of those.
+  const userId = session?.user?.id
   useEffect(() => {
-    if (session) {
+    if (userId) {
       navigate('/home', { replace: true })
     }
-  }, [session, navigate])
+  }, [userId, navigate])
 
   return (
     <PageTransition>
