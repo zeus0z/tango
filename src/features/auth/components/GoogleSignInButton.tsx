@@ -104,6 +104,12 @@ export default function GoogleSignInButton() {
 
     return () => {
       cancelled = true
+      // Release GIS's reference to this instance's callback (which closes
+      // over a nonce scoped to this mount) so a late/stale prompt can't fire
+      // signInWithGoogleIdToken again after unmount.
+      if (typeof google !== 'undefined') {
+        google.accounts.id.cancel()
+      }
     }
   }, [])
 

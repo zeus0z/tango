@@ -6,6 +6,7 @@
  *                           Returns Record<character, MasteryState>
  */
 
+import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { fetchTodayLearnedCount, fetchCharacterProgress } from '../services/home.service'
 import type { MasteryState, FsrsState } from '@/types'
@@ -71,12 +72,16 @@ export function useCharacterMasteryMap(userId: string | undefined): {
     staleTime: 1000 * 30,
   })
 
-  if (!rows) return { data: undefined, isLoading, error: error as Error | null }
+  const map = useMemo(() => {
+    if (!rows) return undefined
+    const result: Record<string, MasteryState> = {}
+    for (const row of rows) {
+      result[row.character] = fsrsStateToMastery(row.state, row.stability)
+    }
+    return result
+  }, [rows])
 
-  const map: Record<string, MasteryState> = {}
-  for (const row of rows) {
-    map[row.character] = fsrsStateToMastery(row.state, row.stability)
-  }
+  if (!map) return { data: undefined, isLoading, error: error as Error | null }
 
   return { data: map, isLoading: false, error: null }
 }
