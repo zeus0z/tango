@@ -22,6 +22,7 @@
  */
 
 import { create } from 'zustand'
+import { useShallow } from 'zustand/react/shallow'
 import type { Session } from '@supabase/supabase-js'
 import type { SessionMode } from '@/types'
 import { getPersistedFontId, DEFAULT_FONT_ID } from '@/lib/fonts'
@@ -146,18 +147,22 @@ export function useIsSessionResolved() {
 
 /** Returns daily progress counters. */
 export function useDailyProgress() {
-  return useAppStore((s) => ({
-    reviewedToday: s.reviewedToday,
-    learnedToday: s.learnedToday,
-  }))
+  return useAppStore(
+    useShallow((s) => ({
+      reviewedToday: s.reviewedToday,
+      learnedToday: s.learnedToday,
+    })),
+  )
 }
 
 /** Returns the current session queue and mode. */
 export function useSessionQueue() {
-  return useAppStore((s) => ({
-    sessionMode: s.sessionMode,
-    sessionQueue: s.sessionQueue,
-  }))
+  return useAppStore(
+    useShallow((s) => ({
+      sessionMode: s.sessionMode,
+      sessionQueue: s.sessionQueue,
+    })),
+  )
 }
 
 /** Returns the current Japanese font preference id. */

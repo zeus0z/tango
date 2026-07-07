@@ -34,11 +34,16 @@ export default function LoginPage() {
 
   // GIS sign-in resolves the session in-page (no redirect), so this effect
   // is what actually navigates to /home once onAuthStateChange fires.
+  // Depend on the user id (a stable primitive), not the session object —
+  // setAuthSession stores a new Session reference on every auth event
+  // (INITIAL_SESSION, SIGNED_IN, TOKEN_REFRESHED, ...), which would otherwise
+  // re-run this effect and re-navigate on every one of those events.
+  const userId = session?.user?.id
   useEffect(() => {
-    if (session) {
+    if (userId) {
       navigate('/home', { replace: true })
     }
-  }, [session, navigate])
+  }, [userId, navigate])
 
   // ── Render ────────────────────────────────────────────────────────────────
 
