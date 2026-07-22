@@ -21,6 +21,7 @@ import {
   useSessionQueueQuery,
   useTeachingPlanQuery,
   useInfiniteReviewQueue,
+  useResetAbandonedGroup,
 } from '@/features/session/hooks/useSessionQueue'
 import { t } from '@/lib/constants/strings'
 import { SessionCardView, InfiniteReviewSessionView } from '@/features/session'
@@ -39,16 +40,21 @@ export default function SessionPage() {
   const isLearnMode = sessionMode === 'learn'
   const isInfiniteMode = sessionMode === 'infinite-review'
 
-  // ── Learn mode: fetch teaching plan ──────────────────────────────────────
+  // ── Learn mode: reset an abandoned group (if any), then fetch teaching plan ─
+  // One-shot pre-check, gated to mount — see useResetAbandonedGroup for why
+  // this can't live inside useTeachingPlanQuery's queryFn.
+  const abandonedGroupChecked = useResetAbandonedGroup(userId, !!userId && isLearnMode)
+
   const {
     data: teachingPlan,
-    isLoading: isPlanLoading,
+    isLoading: isPlanFetching,
     isError: isPlanError,
     error: planError,
   } = useTeachingPlanQuery({
     userId,
-    enabled: !!userId && isLearnMode,
+    enabled: !!userId && isLearnMode && abandonedGroupChecked,
   })
+  const isPlanLoading = isLearnMode ? !abandonedGroupChecked || isPlanFetching : isPlanFetching
 
   // ── Review modes: fetch flat card queue ───────────────────────────────────
   const {

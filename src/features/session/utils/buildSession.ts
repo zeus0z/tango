@@ -9,13 +9,6 @@ import { supabase } from '@/lib/supabase'
 import type { Card, ScriptType } from '@/types'
 
 // ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-/** Maximum number of new BASE character introductions per Learn session. */
-export const NEW_CARDS_PER_SESSION = 5
-
-// ---------------------------------------------------------------------------
 // Teaching loop types
 // ---------------------------------------------------------------------------
 
@@ -32,67 +25,163 @@ export type TeachingItem =
   | { kind: 'drill'; card: Card; cardType: 'A' | 'B' }
 
 // ---------------------------------------------------------------------------
+// Group analysis (curriculum groups, per docs/DATABASE.md "Session Building Logic")
+//
+// The atomic "learn together / reset together" unit is `cards.group_name`,
+// not a fixed count — group sizes vary (vowel/k/s/t/n/h/m-groups = 5,
+// y-group = 3, w-group = 2, standalone ん = 1, dakuten/handakuten groups = 5).
+// A group is:
+//   - 'complete'  — every base card in it has a user_card_progress row
+//   - 'partial'   — some but not all of its base cards have a row (abandoned
+//                   mid-way through a previous Learn session)
+//   - 'untouched' — none of its base cards have a row yet
+// ---------------------------------------------------------------------------
+
+type GroupStatus = 'untouched' | 'partial' | 'complete'
+
+interface GroupCheck {
+  /** group_name of the first non-complete group by genki_order, or null if every group is done. */
+  targetGroup: string | null
+  status: GroupStatus
+  /**
+   * Only populated when status === 'partial': card_ids to wipe — the group's
+   * already-seen base cards, plus any already-seen derived/dakuten cards that
+   * were introduced alongside them (a derived card's own group_name never
+   * becomes a "target group" on its own, since derived cards are excluded
+   * from the base-character query and only ever get taught via the
+   * introduce-pair step attached to their base).
+   */
+  affectedCardIds: string[]
+  /** cardId → reps, reused by buildLearnTeachingQueue to avoid re-querying. */
+  progressMap: Map<string, number>
+  /** Full card list, reused by buildLearnTeachingQueue to avoid a second `cards` round-trip. */
+  allCards: Card[]
+}
+
+/**
+ * Fetches all cards + this user's progress once, then walks curriculum
+ * groups in genki_order order to find the first one that isn't complete.
+ */
+async function findTargetGroup(userId: string): Promise<GroupCheck> {
+  const { data: allCardsData, error: cardsError } = await supabase
+    .from('cards')
+    .select('*')
+    .order('genki_order', { ascending: true })
+  if (cardsError) throw cardsError
+
+  const allCards = (allCardsData ?? []) as Card[]
+
+  const { data: allProgress, error: progressError } = await supabase
+    .from('user_card_progress')
+    .select('card_id, reps')
+    .eq('user_id', userId)
+  if (progressError) throw progressError
+
+  const progressMap = new Map<string, number>(
+    (allProgress ?? []).map((r) => [r.card_id as string, r.reps as number]),
+  )
+  const seenIds = new Set(progressMap.keys())
+
+  // Group base cards (derives_from IS NULL) by group_name, preserving the
+  // order in which each group_name first appears by genki_order.
+  const orderedGroupNames: string[] = []
+  const basesByGroup = new Map<string, typeof allCards>()
+  for (const c of allCards) {
+    if (c.derives_from) continue
+    if (!basesByGroup.has(c.group_name)) {
+      basesByGroup.set(c.group_name, [])
+      orderedGroupNames.push(c.group_name)
+    }
+    basesByGroup.get(c.group_name)!.push(c)
+  }
+
+  for (const groupName of orderedGroupNames) {
+    const bases = basesByGroup.get(groupName)!
+    const seenCount = bases.filter((b) => seenIds.has(b.id)).length
+    if (seenCount === bases.length) continue // fully learned — check the next group
+
+    if (seenCount === 0) {
+      return { targetGroup: groupName, status: 'untouched', affectedCardIds: [], progressMap, allCards }
+    }
+
+    // Partial: sweep the group's seen bases + any seen derived cards taught alongside them.
+    const baseCharSet = new Set(bases.map((b) => b.character))
+    const affectedCardIds = [
+      ...bases.filter((b) => seenIds.has(b.id)).map((b) => b.id),
+      ...allCards
+        .filter((c) => c.derives_from && baseCharSet.has(c.derives_from) && seenIds.has(c.id))
+        .map((c) => c.id),
+    ]
+    return { targetGroup: groupName, status: 'partial', affectedCardIds, progressMap, allCards }
+  }
+
+  return { targetGroup: null, status: 'complete', affectedCardIds: [], progressMap, allCards }
+}
+
+/**
+ * If the next group to teach was left partially learned by a previous
+ * session, wipe its progress (+ review history) so it's taught from scratch
+ * as a whole. No-op if the group is untouched or already complete.
+ *
+ * Must be run as a one-shot step *before* buildLearnTeachingQueue, gated to
+ * component mount rather than embedded in a TanStack Query queryFn — see
+ * docs/DATABASE.md "Session Building Logic" for why (a window-focus refetch
+ * mid-session would otherwise misread "in progress" as "abandoned").
+ */
+export async function resetAbandonedGroupIfAny(userId: string): Promise<void> {
+  const check = await findTargetGroup(userId)
+  if (check.status !== 'partial' || check.affectedCardIds.length === 0) return
+
+  const [progressResult, logsResult] = await Promise.all([
+    supabase
+      .from('user_card_progress')
+      .delete()
+      .eq('user_id', userId)
+      .in('card_id', check.affectedCardIds),
+    supabase
+      .from('review_logs')
+      .delete()
+      .eq('user_id', userId)
+      .in('card_id', check.affectedCardIds),
+  ])
+
+  if (progressResult.error) throw progressResult.error
+  if (logsResult.error) throw logsResult.error
+}
+
+// ---------------------------------------------------------------------------
 // Learn Teaching Mode (PER-23)
-// Builds a structured teaching plan:
-//   For each new base character (up to NEW_CARDS_PER_SESSION):
+// Builds a structured teaching plan for exactly one curriculum group_name:
 //     1. introduce (or introduce-pair if derived exists and not yet seen)
 //     2. drill new chars as TypeA
 //     3. drill new chars as TypeB
 //     4. drill ALL previously taught chars (TypeA + TypeB) cumulatively
 // New-character teaching only — FSRS-due reviews surface via Review All instead.
+// Callers should run resetAbandonedGroupIfAny(userId) first (see above).
 // ---------------------------------------------------------------------------
 
 export async function buildLearnTeachingQueue(userId: string): Promise<TeachingItem[]> {
   // ------------------------------------------------------------------
-  // 1. Get all progress rows for this user (to determine seen/unseen + reps)
+  // 1. Find which curriculum group to teach this session. Reuses the same
+  //    cards + progress fetch for steps 2-3 below (see findTargetGroup) —
+  //    the mock/live query already returned every card, so there's no need
+  //    to re-query 'cards' with a different filter.
   // ------------------------------------------------------------------
-  const { data: allProgress, error: progressError } = await supabase
-    .from('user_card_progress')
-    .select('card_id, reps')
-    .eq('user_id', userId)
-
-  if (progressError) throw progressError
-
-  // Map of cardId → reps (reps > 0 means "introduced")
-  const progressMap = new Map<string, number>(
-    (allProgress ?? []).map((r) => [r.card_id as string, r.reps as number]),
-  )
-
-  const seenCardIds = new Set(progressMap.keys())
+  const { targetGroup, progressMap, allCards } = await findTargetGroup(userId)
+  if (!targetGroup) return [] // every group already fully learned
 
   // ------------------------------------------------------------------
-  // 2. Fetch next N unseen BASE characters (derives_from IS NULL) by genki_order
+  // 2. This group's BASE characters (derives_from IS NULL), by genki_order
   // ------------------------------------------------------------------
-  let baseQuery = supabase
-    .from('cards')
-    .select('*')
-    .is('derives_from', null)
-    .order('genki_order', { ascending: true })
-    .limit(NEW_CARDS_PER_SESSION)
-
-  if (seenCardIds.size > 0) {
-    baseQuery = baseQuery.not('id', 'in', `(${[...seenCardIds].join(',')})`)
-  }
-
-  const { data: newBases, error: basesError } = await baseQuery
-  if (basesError) throw basesError
-
-  const newBaseCards = (newBases ?? []) as Card[]
+  const newBaseCards = allCards
+    .filter((c) => c.group_name === targetGroup && !c.derives_from)
+    .sort((a, b) => a.genki_order - b.genki_order)
 
   // ------------------------------------------------------------------
-  // 3. Fetch derived variants for the new base chars
-  //    (cards where derives_from = base.character)
+  // 3. Derived variants for these base chars (cards where derives_from = base.character)
   // ------------------------------------------------------------------
-  const baseCharacters = newBaseCards.map((c) => c.character)
-  let derivedCards: Card[] = []
-  if (baseCharacters.length > 0) {
-    const { data: derived, error: derivedError } = await supabase
-      .from('cards')
-      .select('*')
-      .in('derives_from', baseCharacters)
-    if (derivedError) throw derivedError
-    derivedCards = (derived ?? []) as Card[]
-  }
+  const baseCharSet = new Set(newBaseCards.map((c) => c.character))
+  const derivedCards = allCards.filter((c) => c.derives_from && baseCharSet.has(c.derives_from))
 
   // Map: base character → first derived card (there may be multiple, we pick the first by genki_order)
   const derivedByBase = new Map<string, Card>()

@@ -16,13 +16,14 @@ export {
   useTeachingPlanQuery,
   useInfiniteReviewQueue,
   useLearntScriptCounts,
+  useResetAbandonedGroup,
 } from './hooks/useSessionQueue'
 export {
   buildLearnTeachingQueue,
   buildReviewAllQueue,
   buildInfiniteReviewQueue,
   fetchLearntScriptCounts,
-  NEW_CARDS_PER_SESSION,
+  resetAbandonedGroupIfAny,
 } from './utils/buildSession'
 export type { TeachingItem } from './utils/buildSession'
 export { persistReview, fetchCardProgress } from './utils/persistReview'
