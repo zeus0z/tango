@@ -29,7 +29,7 @@ export type ResultsByTable = Record<string, QueryResult>
 /** Chain methods used across the services — all return the builder itself. */
 const CHAIN_METHODS = [
   'select', 'eq', 'neq', 'gt', 'gte', 'lt', 'lte',
-  'in', 'is', 'not', 'match', 'order', 'limit',
+  'in', 'is', 'not', 'match', 'order', 'limit', 'delete',
 ] as const
 
 function createBuilder(result: QueryResult): Record<string, unknown> {
